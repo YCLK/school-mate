@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}뽑기 - School Mate{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- 페이지 헤더 -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-random text-indigo-600 mr-3"></i>뽑기
+        </h1>
+        <p class="text-gray-600">발표자 선정이나 다양한 활동에 활용할 수 있는 뽑기 기능입니다.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- 학생 명단 입력 섹션 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-users text-blue-600 mr-2"></i>학생 명단
+            </h2>
+            
+            <!-- 개별 학생 추가 -->
+            <div class="mb-4">
+                <div class="flex gap-2">
+                    <input type="text" id="studentName" placeholder="학생 이름을 입력하세요" 
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <button onclick="addStudent()" 
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 일괄 입력 -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">일괄 입력 (줄바꿈으로 구분)</label>
+                <textarea id="bulkInput" rows="4" placeholder="김철수&#10;이영희&#10;박민수&#10;..." 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                <button onclick="addBulkStudents()" 
+                        class="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-upload mr-2"></i>일괄 추가
+                </button>
+            </div>
+
+            <!-- 학생 목록 -->
+            <div class="mb-4">
+                <h3 class="text-lg font-medium mb-2 text-gray-800">현재 목록 (<span id="studentCount">0</span>명)</h3>
+                <div id="studentList" class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                    <p class="text-gray-500 text-center py-4">학생을 추가해주세요</p>
+                </div>
+            </div>
+
+            <!-- 컨트롤 버튼 -->
+            <div class="flex gap-2">
+                <button onclick="clearStudents()" 
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>전체 삭제
+                </button>
+                <button onclick="shuffleStudents()" 
+                        class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                    <i class="fas fa-shuffle mr-2"></i>섞기
+                </button>
+            </div>
+        </div>
+
+        <!-- 뽑기 결과 섹션 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-trophy text-yellow-600 mr-2"></i>뽑기 결과
+            </h2>
+
+            <!-- 뽑기 디스플레이 -->
+            <div class="mb-6">
+                <div id="lotteryDisplay" class="relative bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-8 text-center min-h-[200px] flex items-center justify-center">
+                    <div id="lotteryContent" class="text-white">
+                        <i class="fas fa-hand-pointer text-4xl mb-4 opacity-50"></i>
+                        <p class="text-lg opacity-75">뽑기 버튼을 눌러주세요</p>
+                    </div>
+                    
+                    <!-- 애니메이션 효과 -->
+                    <div id="animationOverlay" class="absolute inset-0 hidden">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-xl flex items-center justify-center">
+                            <div class="text-white text-center">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                                <p class="text-xl font-semibold">뽑는 중...</p>
+                                <div id="shuffleText" class="text-lg mt-2 font-mono"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 뽑기 설정 -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">뽑기 개수</label>
+                <select id="pickCount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="1">1명</option>
+                    <option value="2">2명</option>
+                    <option value="3">3명</option>
+                    <option value="5">5명</option>
+                </select>
+            </div>
+
+            <!-- 뽑기 버튼 -->
+            <button id="lotteryBtn" onclick="startLottery()" 
+                    class="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                <i class="fas fa-magic mr-2"></i>뽑기 시작!
+            </button>
+
+            <!-- 뽑기 기록 -->
+            <div class="mt-6">
+                <h3 class="text-lg font-medium mb-2 text-gray-800">뽑기 기록</h3>
+                <div id="lotteryHistory" class="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                    <p class="text-gray-500 text-center py-2">뽑기 기록이 없습니다</p>
+                </div>
+                <button onclick="clearHistory()" 
+                        class="mt-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                    <i class="fas fa-eraser mr-1"></i>기록 삭제
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let students = [];
+let lotteryHistory = [];
+let isLotteryRunning = false;
+
+// 학생 추가
+function addStudent() {
+    const input = document.getElementById('studentName');
+    const name = input.value.trim();
+    
+    if (name && !students.includes(name)) {
+        students.push(name);
+        input.value = '';
+        updateStudentList();
+        updateLotteryButton();
+    } else if (students.includes(name)) {
+        alert('이미 존재하는 학생입니다.');
+    }
+}
+
+// 일괄 학생 추가
+function addBulkStudents() {
+    const textarea = document.getElementById('bulkInput');
+    const names = textarea.value.split('\n').map(name => name.trim()).filter(name => name);
+    
+    names.forEach(name => {
+        if (name && !students.includes(name)) {
+            students.push(name);
+        }
+    });
+    
+    textarea.value = '';
+    updateStudentList();
+    updateLotteryButton();
+}
+
+// 학생 삭제
+function removeStudent(index) {
+    students.splice(index, 1);
+    updateStudentList();
+    updateLotteryButton();
+}
+
+// 학생 목록 업데이트
+function updateStudentList() {
+    const listElement = document.getElementById('studentList');
+    const countElement = document.getElementById('studentCount');
+    
+    countElement.textContent = students.length;
+    
+    if (students.length === 0) {
+        listElement.innerHTML = '<p class="text-gray-500 text-center py-4">학생을 추가해주세요</p>';
+        return;
+    }
+    
+    const studentItems = students.map((student, index) => `
+        <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+            <span class="text-gray-800">${student}</span>
+            <button onclick="removeStudent(${index})" 
+                    class="text-red-500 hover:text-red-700 p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+    
+    listElement.innerHTML = studentItems;
+}
+
+// 뽑기 버튼 상태 업데이트
+function updateLotteryButton() {
+    const button = document.getElementById('lotteryBtn');
+    button.disabled = students.length === 0 || isLotteryRunning;
+}
+
+// 학생 목록 섞기
+function shuffleStudents() {
+    for (let i = students.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [students[i], students[j]] = [students[j], students[i]];
+    }
+    updateStudentList();
+}
+
+// 전체 학생 삭제
+function clearStudents() {
+    if (confirm('모든 학생을 삭제하시겠습니까?')) {
+        students = [];
+        updateStudentList();
+        updateLotteryButton();
+    }
+}
+
+// 뽑기 시작
+function startLottery() {
+    if (students.length === 0 || isLotteryRunning) return;
+    
+    isLotteryRunning = true;
+    updateLotteryButton();
+    
+    const pickCount = parseInt(document.getElementById('pickCount').value);
+    const actualPickCount = Math.min(pickCount, students.length);
+    
+    showAnimation();
+    
+    // 3초 후 결과 표시
+    setTimeout(() => {
+        showResult(actualPickCount);
+        isLotteryRunning = false;
+        updateLotteryButton();
+    }, 3000);
+}
+
+// 애니메이션 표시
+function showAnimation() {
+    const overlay = document.getElementById('animationOverlay');
+    const shuffleText = document.getElementById('shuffleText');
+    
+    overlay.classList.remove('hidden');
+    
+    // 이름들이 빠르게 바뀌는 애니메이션
+    let animationInterval = setInterval(() => {
+        const randomName = students[Math.floor(Math.random() * students.length)];
+        shuffleText.textContent = randomName;
+    }, 100);
+    
+    // 3초 후 애니메이션 정지
+    setTimeout(() => {
+        clearInterval(animationInterval);
+        overlay.classList.add('hidden');
+    }, 3000);
+}
+
+// 결과 표시
+function showResult(count) {
+    const content = document.getElementById('lotteryContent');
+    const shuffledStudents = [...students].sort(() => Math.random() - 0.5);
+    const winners = shuffledStudents.slice(0, count);
+    
+    // 결과 표시
+    if (winners.length === 1) {
+        content.innerHTML = `
+            <div class="animate-bounce">
+                <i class="fas fa-crown text-6xl text-yellow-300 mb-4"></i>
+                <p class="text-2xl font-bold mb-2">당첨!</p>
+                <p class="text-3xl font-black">${winners[0]}</p>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div class="animate-bounce">
+                <i class="fas fa-trophy text-6xl text-yellow-300 mb-4"></i>
+                <p class="text-2xl font-bold mb-2">당첨자들!</p>
+                <div class="text-xl font-bold">
+                    ${winners.map(name => `<p class="mb-1">${name}</p>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // 기록 추가
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    lotteryHistory.unshift({
+        time: timeString,
+        winners: winners,
+        total: students.length
+    });
+    
+    updateHistory();
+}
+
+// 기록 업데이트
+function updateHistory() {
+    const historyElement = document.getElementById('lotteryHistory');
+    
+    if (lotteryHistory.length === 0) {
+        historyElement.innerHTML = '<p class="text-gray-500 text-center py-2">뽑기 기록이 없습니다</p>';
+        return;
+    }
+    
+    const historyItems = lotteryHistory.map(record => `
+        <div class="p-2 border-b border-gray-200 last:border-b-0">
+            <div class="flex justify-between items-center">
+                <span class="font-medium text-indigo-600">${record.winners.join(', ')}</span>
+                <span class="text-xs text-gray-500">${record.time}</span>
+            </div>
+            <p class="text-xs text-gray-600">총 ${record.total}명 중 ${record.winners.length}명 선정</p>
+        </div>
+    `).join('');
+    
+    historyElement.innerHTML = historyItems;
+}
+
+// 기록 삭제
+function clearHistory() {
+    if (confirm('뽑기 기록을 삭제하시겠습니까?')) {
+        lotteryHistory = [];
+        updateHistory();
+    }
+}
+
+// Enter 키로 학생 추가
+document.getElementById('studentName').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        addStudent();
+    }
+});
+
+// 초기 상태 설정
+document.addEventListener('DOMContentLoaded', function() {
+    updateLotteryButton();
+});
+</script>
+{% endblock %}

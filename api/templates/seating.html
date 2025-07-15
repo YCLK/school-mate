@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}자리 바꾸기 - School Mate{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- 페이지 헤더 -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-chair text-red-600 mr-3"></i>자리 바꾸기
+        </h1>
+        <p class="text-gray-600">교실 자리를 공정하게 배치하고 관리하세요.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <!-- 교실 설정 섹션 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-cog text-blue-600 mr-2"></i>교실 설정
+            </h2>
+            
+            <!-- 행/열 설정 -->
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">행 (세로)</label>
+                    <input type="number" id="rows" value="6" min="1" max="10" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           onchange="updateClassroomLayout()">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">열 (가로)</label>
+                    <input type="number" id="cols" value="5" min="1" max="10" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           onchange="updateClassroomLayout()">
+                </div>
+            </div>
+
+            <!-- 자리 설정 모드 -->
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" id="editMode" class="mr-2" onchange="toggleEditMode()">
+                    <span class="text-sm text-gray-700">자리 편집 모드</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">체크하면 자리를 클릭하여 비활성화할 수 있습니다.</p>
+            </div>
+
+            <!-- 자리 정보 -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex justify-between text-sm">
+                    <span>전체 자리: <span id="totalSeats" class="font-semibold">30</span></span>
+                    <span>활성 자리: <span id="activeSeats" class="font-semibold text-blue-600">30</span></span>
+                </div>
+                <div class="mt-2 text-sm">
+                    <span>학생 수: <span id="studentCount" class="font-semibold text-green-600">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 학생 명단 섹션 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-users text-green-600 mr-2"></i>학생 명단
+            </h2>
+            
+            <!-- 개별 학생 추가 -->
+            <div class="mb-4">
+                <div class="flex gap-2">
+                    <input type="text" id="studentName" placeholder="학생 이름을 입력하세요" 
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <button onclick="addStudent()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 일괄 입력 -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">일괄 입력</label>
+                <textarea id="bulkInput" rows="4" placeholder="김철수&#10;이영희&#10;박민수&#10;..." 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                <button onclick="addBulkStudents()" 
+                        class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-upload mr-2"></i>일괄 추가
+                </button>
+            </div>
+
+            <!-- 학생 목록 -->
+            <div class="mb-4">
+                <h3 class="text-lg font-medium mb-2 text-gray-800">학생 목록</h3>
+                <div id="studentList" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                    <p class="text-gray-500 text-center py-4">학생을 추가해주세요</p>
+                </div>
+            </div>
+
+            <!-- 컨트롤 버튼 -->
+            <div class="flex gap-2">
+                <button onclick="clearStudents()" 
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>전체 삭제
+                </button>
+                <button onclick="shuffleStudents()" 
+                        class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                    <i class="fas fa-shuffle mr-2"></i>섞기
+                </button>
+            </div>
+        </div>
+
+        <!-- 자리 배치 버튼 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-magic text-purple-600 mr-2"></i>자리 배치
+            </h2>
+            
+            <div class="space-y-4">
+                <div id="seatingStatus" class="bg-gray-50 rounded-lg p-4 text-center">
+                    <p class="text-gray-600">학생을 추가하고 자리 배치를 시작하세요</p>
+                </div>
+                
+                <button id="arrangeBtn" onclick="arrangeSeats()" 
+                        class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    <i class="fas fa-magic mr-2"></i>자리 배치하기
+                </button>
+                
+                <button onclick="clearSeats()" 
+                        class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-eraser mr-2"></i>자리 초기화
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 교실 레이아웃 -->
+    <div class="mt-8 bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-chalkboard-teacher text-gray-600 mr-2"></i>교실 레이아웃
+        </h2>
+        
+        <!-- 애니메이션 오버레이 -->
+        <div id="animationOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg p-8 text-center">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p class="text-xl font-semibold text-gray-800">자리를 배치하고 있습니다...</p>
+            </div>
+        </div>
+        
+        <div class="classroom-container">
+            <!-- 교탁 -->
+            <div class="flex justify-center mb-6">
+                <div class="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-8 py-4 rounded-lg shadow-lg">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>
+                    <span class="font-semibold">교탁</span>
+                </div>
+            </div>
+            
+            <!-- 자리 배치 -->
+            <div id="classroom" class="grid gap-3 justify-center">
+                <!-- 자리들이 여기에 동적으로 생성됩니다 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.seat {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    font-size: 12px;
+    text-align: center;
+    position: relative;
+}
+
+.seat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.seat.occupied {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.seat.disabled {
+    background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+    border-color: #94a3b8;
+    color: #64748b;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.seat.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.seat.edit-mode:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+    border-color: #f59e0b;
+}
+
+.seat-number {
+    font-size: 10px;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.seat-animation {
+    animation: seatPulse 0.5s ease-in-out;
+}
+
+@keyframes seatPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@media (max-width: 768px) {
+    .seat {
+        width: 60px;
+        height: 60px;
+        font-size: 10px;
+    }
+}
+</style>
+
+<script>
+let students = [];
+let classroom = [];
+let isEditMode = false;
+let isArranging = false;
+
+// 초기 교실 레이아웃 생성
+function updateClassroomLayout() {
+    const rows = parseInt(document.getElementById('rows').value);
+    const cols = parseInt(document.getElementById('cols').value);
+    
+    // 교실 배열 초기화
+    classroom = [];
+    for (let i = 0; i < rows; i++) {
+        classroom[i] = [];
+        for (let j = 0; j < cols; j++) {
+            classroom[i][j] = {
+                active: true,
+                student: null,
+                row: i,
+                col: j
+            };
+        }
+    }
+    
+    renderClassroom();
+    updateSeatsInfo();
+}
+
+// 교실 렌더링
+function renderClassroom() {
+    const classroomElement = document.getElementById('classroom');
+    const cols = parseInt(document.getElementById('cols').value);
+    
+    classroomElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    classroomElement.innerHTML = '';
+    
+    classroom.forEach((row, rowIndex) => {
+        row.forEach((seat, colIndex) => {
+            const seatElement = document.createElement('div');
+            seatElement.className = `seat ${seat.active ? '' : 'disabled'} ${isEditMode ? 'edit-mode' : ''}`;
+            seatElement.onclick = () => handleSeatClick(rowIndex, colIndex);
+            
+            const seatNumber = (rowIndex * row.length) + colIndex + 1;
+            seatElement.innerHTML = `
+                <div class="seat-number">${seatNumber}</div>
+                <div class="seat-content">${seat.student || ''}</div>
+            `;
+            
+            if (seat.student) {
+                seatElement.classList.add('occupied');
+            }
+            
+            classroomElement.appendChild(seatElement);
+        });
+    });
+}
+
+// 자리 클릭 처리
+function handleSeatClick(row, col) {
+    if (!isEditMode) return;
+    
+    const seat = classroom[row][col];
+    seat.active = !seat.active;
+    
+    // 학생이 배치된 자리를 비활성화하면 학생 제거
+    if (!seat.active && seat.student) {
+        seat.student = null;
+    }
+    
+    renderClassroom();
+    updateSeatsInfo();
+}
+
+// 편집 모드 토글
+function toggleEditMode() {
+    isEditMode = document.getElementById('editMode').checked;
+    renderClassroom();
+}
+
+// 자리 정보 업데이트
+function updateSeatsInfo() {
+    const totalSeats = classroom.flat().length;
+    const activeSeats = classroom.flat().filter(seat => seat.active).length;
+    
+    document.getElementById('totalSeats').textContent = totalSeats;
+    document.getElementById('activeSeats').textContent = activeSeats;
+    document.getElementById('studentCount').textContent = students.length;
+    
+    updateArrangeButton();
+}
+
+// 학생 추가
+function addStudent() {
+    const input = document.getElementById('studentName');
+    const name = input.value.trim();
+    
+    if (name && !students.includes(name)) {
+        students.push(name);
+        input.value = '';
+        updateStudentList();
+        updateSeatsInfo();
+    } else if (students.includes(name)) {
+        alert('이미 존재하는 학생입니다.');
+    }
+}
+
+// 일괄 학생 추가
+function addBulkStudents() {
+    const textarea = document.getElementById('bulkInput');
+    const names = textarea.value.split('\n').map(name => name.trim()).filter(name => name);
+    
+    names.forEach(name => {
+        if (name && !students.includes(name)) {
+            students.push(name);
+        }
+    });
+    
+    textarea.value = '';
+    updateStudentList();
+    updateSeatsInfo();
+}
+
+// 학생 삭제
+function removeStudent(index) {
+    students.splice(index, 1);
+    updateStudentList();
+    updateSeatsInfo();
+}
+
+// 학생 목록 업데이트
+function updateStudentList() {
+    const listElement = document.getElementById('studentList');
+    
+    if (students.length === 0) {
+        listElement.innerHTML = '<p class="text-gray-500 text-center py-4">학생을 추가해주세요</p>';
+        return;
+    }
+    
+    const studentItems = students.map((student, index) => `
+        <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+            <span class="text-gray-800">${student}</span>
+            <button onclick="removeStudent(${index})" 
+                    class="text-red-500 hover:text-red-700 p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+    
+    listElement.innerHTML = studentItems;
+}
+
+// 학생 목록 섞기
+function shuffleStudents() {
+    for (let i = students.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [students[i], students[j]] = [students[j], students[i]];
+    }
+    updateStudentList();
+}
+
+// 전체 학생 삭제
+function clearStudents() {
+    if (confirm('모든 학생을 삭제하시겠습니까?')) {
+        students = [];
+        updateStudentList();
+        updateSeatsInfo();
+    }
+}
+
+// 자리 배치 버튼 상태 업데이트
+function updateArrangeButton() {
+    const button = document.getElementById('arrangeBtn');
+    const statusElement = document.getElementById('seatingStatus');
+    const activeSeats = classroom.flat().filter(seat => seat.active).length;
+    
+    if (students.length === 0) {
+        button.disabled = true;
+        statusElement.innerHTML = '<p class="text-gray-600">학생을 추가하고 자리 배치를 시작하세요</p>';
+    } else if (students.length > activeSeats) {
+        button.disabled = true;
+        statusElement.innerHTML = `<p class="text-red-600">학생 수(${students.length})가 활성 자리(${activeSeats})보다 많습니다</p>`;
+    } else {
+        button.disabled = isArranging;
+        statusElement.innerHTML = `<p class="text-green-600">준비 완료! 학생 ${students.length}명을 ${activeSeats}개 자리에 배치할 수 있습니다</p>`;
+    }
+}
+
+// 자리 배치
+function arrangeSeats() {
+    if (students.length === 0 || isArranging) return;
+    
+    isArranging = true;
+    updateArrangeButton();
+    
+    // 애니메이션 시작
+    document.getElementById('animationOverlay').classList.remove('hidden');
+    
+    setTimeout(() => {
+        // 모든 자리 초기화
+        classroom.forEach(row => {
+            row.forEach(seat => {
+                seat.student = null;
+            });
+        });
+        
+        // 활성 자리 목록 생성
+        const activeSeats = [];
+        classroom.forEach(row => {
+            row.forEach(seat => {
+                if (seat.active) {
+                    activeSeats.push(seat);
+                }
+            });
+        });
+        
+        // 학생 목록 섞기
+        const shuffledStudents = [...students].sort(() => Math.random() - 0.5);
+        
+        // 자리에 학생 배치
+        shuffledStudents.forEach((student, index) => {
+            if (index < activeSeats.length) {
+                activeSeats[index].student = student;
+            }
+        });
+        
+        // 애니메이션 종료
+        document.getElementById('animationOverlay').classList.add('hidden');
+        isArranging = false;
+        
+        // 교실 렌더링
+        renderClassroom();
+        updateArrangeButton();
+        
+        // 자리 애니메이션 효과
+        setTimeout(() => {
+            document.querySelectorAll('.seat.occupied').forEach(seat => {
+                seat.classList.add('seat-animation');
+            });
+        }, 100);
+        
+    }, 2000);
+}
+
+// 자리 초기화
+function clearSeats() {
+    if (confirm('모든 자리를 초기화하시겠습니까?')) {
+        classroom.forEach(row => {
+            row.forEach(seat => {
+                seat.student = null;
+            });
+        });
+        renderClassroom();
+    }
+}
+
+// Enter 키로 학생 추가
+document.getElementById('studentName').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        addStudent();
+    }
+});
+
+// 초기 설정
+document.addEventListener('DOMContentLoaded', function() {
+    updateClassroomLayout();
+});
+</script>
+{% endblock %}

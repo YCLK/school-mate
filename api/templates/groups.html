@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- 헤더 -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-users text-orange-600 mr-3"></i>모둠 만들기
+        </h1>
+        <p class="text-lg text-gray-600">학생들을 공정하게 모둠으로 나누어보세요</p>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="max-w-4xl mx-auto">
+        <!-- 입력 섹션 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <!-- 학생 명단 입력 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-3 text-gray-800">
+                    <i class="fas fa-list mr-2 text-blue-600"></i>학생 명단 입력
+                </h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        학생 이름 (한 줄에 하나씩 입력하세요)
+                    </label>
+                    <textarea id="studentNames" 
+                              class="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none" 
+                              placeholder="김철수&#10;이영희&#10;박민수&#10;최지은&#10;..."></textarea>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="clearNames()" class="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm hover:bg-red-200 transition-colors">
+                        <i class="fas fa-trash mr-1"></i>전체 삭제
+                    </button>
+                </div>
+                <div id="studentCount" class="text-sm text-gray-500">총 학생 수: 0명</div>
+            </div>
+
+            <!-- 모둠 설정 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-3 text-gray-800">
+                    <i class="fas fa-cogs mr-2 text-green-600"></i>모둠 설정
+                </h2>
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">모둠 개수</label>
+                        <input type="number" id="groupCount" min="1" max="20" value="4" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">모둠당 학생 수</label>
+                        <input type="number" id="studentsPerGroup" min="1" max="10" value="5" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <!-- 남는 학생 처리 옵션 -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">남는 학생 처리 방법</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="remainingOption" value="addToLast" checked 
+                                   class="mr-2 text-orange-600 focus:ring-orange-500">
+                            <span class="text-sm">마지막 모둠에 추가</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="remainingOption" value="createNew" 
+                                   class="mr-2 text-orange-600 focus:ring-orange-500">
+                            <span class="text-sm">새로운 모둠 만들기</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 미리보기 정보 -->
+                <div id="previewInfo" class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600"></div>
+            </div>
+
+            <!-- 실행 버튼 -->
+            <div class="text-center">
+                <button onclick="createGroups()" id="createBtn" 
+                        class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-magic mr-2"></i>모둠 만들기
+                </button>
+            </div>
+        </div>
+
+        <!-- 로딩 애니메이션 -->
+        <div id="loadingSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 text-center mb-6">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p class="text-lg text-gray-600">모둠을 만들고 있어요...</p>
+            </div>
+        </div>
+
+        <!-- 결과 섹션 -->
+        <div id="resultSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>모둠 완성!
+                </h2>
+                <div id="groupResults" class="grid gap-4"></div>
+                
+                <!-- 다시 만들기 버튼 -->
+                <div class="text-center mt-6">
+                    <button onclick="resetGroups()" 
+                            class="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors mr-4">
+                        <i class="fas fa-redo mr-2"></i>다시 만들기
+                    </button>
+                    <button onclick="shuffleGroups()" 
+                            class="bg-orange-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                        <i class="fas fa-shuffle mr-2"></i>셔플
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStudents = [];
+    let currentGroups = [];
+
+    // 학생 수 업데이트
+    function updateStudentCount() {
+        const textarea = document.getElementById('studentNames');
+        const names = textarea.value.trim().split('\n').filter(name => name.trim() !== '');
+        currentStudents = names;
+        document.getElementById('studentCount').textContent = `총 학생 수: ${names.length}명`;
+        updatePreview();
+    }
+
+    // 미리보기 정보 업데이트
+    function updatePreview() {
+        const groupCount = parseInt(document.getElementById('groupCount').value) || 0;
+        const studentsPerGroup = parseInt(document.getElementById('studentsPerGroup').value) || 0;
+        const totalStudents = currentStudents.length;
+        const remainingOption = document.querySelector('input[name="remainingOption"]:checked').value;
+
+        const previewDiv = document.getElementById('previewInfo');
+        
+        if (totalStudents === 0) {
+            previewDiv.innerHTML = '<i class="fas fa-info-circle mr-2"></i>학생 명단을 입력해주세요.';
+            return;
+        }
+
+        if (groupCount === 0 || studentsPerGroup === 0) {
+            previewDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>모둠 개수와 모둠당 학생 수를 입력해주세요.';
+            return;
+        }
+
+        const idealTotal = groupCount * studentsPerGroup;
+        const remaining = totalStudents - idealTotal;
+
+        let previewText = `<i class="fas fa-eye mr-2"></i>미리보기: `;
+        
+        if (remaining === 0) {
+            previewText += `${groupCount}개 모둠, 각 모둠당 ${studentsPerGroup}명 (완벽한 배치)`;
+        } else if (remaining > 0) {
+            if (remainingOption === 'addToLast') {
+                previewText += `${groupCount}개 모둠, 마지막 모둠에 ${remaining}명 추가 (${studentsPerGroup + remaining}명)`;
+            } else {
+                const newGroups = Math.ceil(remaining / studentsPerGroup);
+                previewText += `${groupCount + newGroups}개 모둠, 추가 모둠 ${newGroups}개 생성`;
+            }
+        } else {
+            previewText += `${groupCount}개 모둠, 각 모둠당 최대 ${studentsPerGroup}명 (${Math.abs(remaining)}명 부족)`;
+        }
+
+        previewDiv.innerHTML = previewText;
+    }
+
+    // 샘플 명단 추가
+    function addQuickNames() {
+        const sampleNames = [
+            '김철수', '이영희', '박민수', '최지은', '정수현',
+            '한소영', '윤준호', '장미래', '오세진', '임나영',
+            '강동현', '송하은', '조민기', '배서연', '안태호',
+            '유지원', '신예진', '홍성민', '노수빈', '서지훈'
+        ];
+        
+        document.getElementById('studentNames').value = sampleNames.join('\n');
+        updateStudentCount();
+    }
+
+    // 전체 삭제
+    function clearNames() {
+        document.getElementById('studentNames').value = '';
+        updateStudentCount();
+    }
+
+    // 배열 셔플 함수
+    function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    // 모둠 만들기
+    function createGroups() {
+        if (currentStudents.length === 0) {
+            alert('학생 명단을 입력해주세요.');
+            return;
+        }
+
+        const groupCount = parseInt(document.getElementById('groupCount').value);
+        const studentsPerGroup = parseInt(document.getElementById('studentsPerGroup').value);
+        const remainingOption = document.querySelector('input[name="remainingOption"]:checked').value;
+
+        if (groupCount <= 0 || studentsPerGroup <= 0) {
+            alert('모둠 개수와 모둠당 학생 수를 정확히 입력해주세요.');
+            return;
+        }
+
+        // 로딩 시작
+        document.getElementById('loadingSection').classList.remove('hidden');
+        document.getElementById('resultSection').classList.add('hidden');
+        document.getElementById('createBtn').disabled = true;
+
+        setTimeout(() => {
+            const shuffledStudents = shuffleArray(currentStudents);
+            currentGroups = [];
+
+            if (remainingOption === 'addToLast') {
+                // 마지막 모둠에 추가
+                for (let i = 0; i < groupCount; i++) {
+                    currentGroups.push([]);
+                }
+
+                shuffledStudents.forEach((student, index) => {
+                    const groupIndex = Math.min(Math.floor(index / studentsPerGroup), groupCount - 1);
+                    currentGroups[groupIndex].push(student);
+                });
+            } else {
+                // 새로운 모둠 만들기
+                for (let i = 0; i < shuffledStudents.length; i += studentsPerGroup) {
+                    currentGroups.push(shuffledStudents.slice(i, i + studentsPerGroup));
+                }
+            }
+
+            displayGroups();
+            
+            // 로딩 종료
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('createBtn').disabled = false;
+        }, 1500);
+    }
+
+    // 모둠 결과 표시
+    function displayGroups() {
+        const container = document.getElementById('groupResults');
+        container.innerHTML = '';
+
+        const colors = [
+            'bg-red-100 border-red-300 text-red-800',
+            'bg-blue-100 border-blue-300 text-blue-800',
+            'bg-green-100 border-green-300 text-green-800',
+            'bg-yellow-100 border-yellow-300 text-yellow-800',
+            'bg-purple-100 border-purple-300 text-purple-800',
+            'bg-indigo-100 border-indigo-300 text-indigo-800',
+            'bg-pink-100 border-pink-300 text-pink-800',
+            'bg-orange-100 border-orange-300 text-orange-800'
+        ];
+
+        currentGroups.forEach((group, index) => {
+            const colorClass = colors[index % colors.length];
+            const groupDiv = document.createElement('div');
+            groupDiv.className = `${colorClass} border-2 rounded-lg p-4 transform transition-all duration-300 hover:scale-105`;
+            groupDiv.style.opacity = '0';
+            groupDiv.style.transform = 'translateY(20px)';
+            
+            groupDiv.innerHTML = `
+                <h3 class="font-bold text-lg mb-3 flex items-center">
+                    <i class="fas fa-users mr-2"></i>모둠 ${index + 1} (${group.length}명)
+                </h3>
+                <div class="grid grid-cols-2 gap-2">
+                    ${group.map(student => `
+                        <div class="bg-white bg-opacity-50 rounded-md px-3 py-2 text-center font-medium">
+                            ${student}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.appendChild(groupDiv);
+            
+            // 애니메이션 효과
+            setTimeout(() => {
+                groupDiv.style.opacity = '1';
+                groupDiv.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    }
+
+    // 셔플 (다시 배치)
+    function shuffleGroups() {
+        if (currentStudents.length === 0) return;
+        
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>셔플 중...';
+        
+        setTimeout(() => {
+            createGroups();
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-shuffle mr-2"></i>셔플';
+        }, 1000);
+    }
+
+    // 리셋
+    function resetGroups() {
+        document.getElementById('resultSection').classList.add('hidden');
+        currentGroups = [];
+    }
+
+    // 이벤트 리스너 등록
+    document.getElementById('studentNames').addEventListener('input', updateStudentCount);
+    document.getElementById('groupCount').addEventListener('input', updatePreview);
+    document.getElementById('studentsPerGroup').addEventListener('input', updatePreview);
+    document.querySelectorAll('input[name="remainingOption"]').forEach(radio => {
+        radio.addEventListener('change', updatePreview);
+    });
+
+    // 초기 설정
+    updateStudentCount();
+    updatePreview();
+</script>
+{% endblock %}

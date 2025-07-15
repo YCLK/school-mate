@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- 헤더 -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-utensils text-orange-600 mr-3"></i>급식 조회
+        </h1>
+        <p class="text-lg text-gray-600">오늘의 급식 메뉴를 확인해보세요</p>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="max-w-4xl mx-auto">
+        <!-- 날짜 선택 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <label class="text-sm font-medium text-gray-700">날짜 선택:</label>
+                    <input type="date" id="mealDate" 
+                           class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                </div>
+                <button onclick="fetchMealData()" id="fetchBtn" 
+                        class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-search mr-2"></i>급식 조회
+                </button>
+            </div>
+        </div>
+
+        <!-- 에러 메시지 -->
+        <div id="errorSection" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                    <div>
+                        <h3 class="text-red-800 font-semibold">오류가 발생했습니다</h3>
+                        <p class="text-red-700 mt-1" id="errorMessage">급식 정보를 불러올 수 없습니다.</p>
+                    </div>
+                </div>
+                <button onclick="resetMealSearch()" 
+                        class="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">
+                    <i class="fas fa-redo mr-2"></i>다시 시도
+                </button>
+            </div>
+        </div>
+
+        <!-- 로딩 -->
+        <div id="loadingSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 text-center mb-6">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p class="text-lg text-gray-600">급식 정보를 불러오고 있어요...</p>
+            </div>
+        </div>
+
+        <!-- 급식 정보 표시 -->
+        <div id="mealSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- 급식 카드 헤더 -->
+                <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 text-center">
+                    <h2 class="text-2xl font-bold mb-2">
+                        <i class="fas fa-calendar-day mr-2"></i>
+                        <span id="mealDateTitle">오늘의 급식</span>
+                    </h2>
+                    <p class="text-orange-100" id="mealDateSubtitle">2025년 7월 14일</p>
+                </div>
+
+                <!-- 급식 메뉴 -->
+                <div class="p-6">
+                    <div id="mealMenuContainer" class="space-y-4">
+                        <!-- 메뉴 아이템들이 여기에 동적으로 생성됩니다 -->
+                    </div>
+                </div>
+
+                <!-- 다운로드 버튼 -->
+                <div class="border-t border-gray-200 p-6 text-center">
+                    <button onclick="downloadMealImage()" 
+                            class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-download mr-2"></i>이미지로 다운로드
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 급식 없음 -->
+        <div id="noMealSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-6xl mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">급식 정보가 없습니다</h2>
+                <p class="text-gray-600 mb-6">해당 날짜에는 급식이 제공되지 않습니다.</p>
+                <button onclick="resetMealSearch()" 
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-redo mr-2"></i>다시 조회
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 숨겨진 캔버스 (이미지 생성용) -->
+    <canvas id="mealCanvas" width="1000" height="1000" style="display: none;"></canvas>
+</div>
+
+<script>
+    let currentMealData = null;
+    let currentDate = null;
+
+    // 페이지 로드 시 오늘 날짜 설정 및 자동 조회
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        document.getElementById('mealDate').value = dateString;
+        
+        // 페이지 로드 시 오늘의 급식 자동 조회
+        fetchMealData();
+    });
+
+    // 급식 데이터 가져오기 (실제 Flask 백엔드 호출)
+    async function fetchMealData() {
+        const dateInput = document.getElementById('mealDate').value;
+        if (!dateInput) {
+            alert('날짜를 선택해주세요.');
+            return;
+        }
+
+        // 로딩 시작
+        showLoading();
+        
+        try {
+            // 날짜를 YYYYMMDD 형식으로 변환
+            const formattedDate = dateInput.replace(/-/g, '');
+            
+            // Flask 백엔드의 getMeal 함수 호출
+            const response = await fetch('/get_meal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date: formattedDate
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                currentMealData = data.meal_data;
+                currentDate = dateInput;
+                
+                if (!currentMealData || currentMealData.length === 0 || 
+                    (currentMealData.length === 1 && currentMealData[0].includes('급식 없음'))) {
+                    showNoMeal();
+                } else {
+                    showMealData(currentMealData, dateInput);
+                }
+            } else {
+                throw new Error(data.error || '급식 정보를 가져오는데 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error fetching meal data:', error);
+            showError(error.message);
+        }
+    }
+
+    // 로딩 표시
+    function showLoading() {
+        hideAllSections();
+        document.getElementById('loadingSection').classList.remove('hidden');
+    }
+
+    // 에러 표시
+    function showError(message) {
+        hideAllSections();
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorSection').classList.remove('hidden');
+    }
+
+    // 급식 데이터 표시
+    function showMealData(mealData, date) {
+        hideAllSections();
+        
+        const dateObj = new Date(date);
+        const formattedDate = dateObj.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // 오늘 날짜인지 확인
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        const isToday = date === todayString;
+        
+        document.getElementById('mealDateTitle').textContent = isToday ? '오늘의 급식' : '급식 메뉴';
+        document.getElementById('mealDateSubtitle').textContent = formattedDate;
+        
+        const container = document.getElementById('mealMenuContainer');
+        container.innerHTML = '';
+        
+        // 날짜 정보 제외하고 메뉴만 표시
+        const menuItems = mealData.slice(1).filter(item => item && item.trim());
+        
+        if (menuItems.length === 0) {
+            showNoMeal();
+            return;
+        }
+        
+        menuItems.forEach((item, index) => {
+            const menuDiv = document.createElement('div');
+            menuDiv.className = 'flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+            menuDiv.style.opacity = '0';
+            menuDiv.style.transform = 'translateY(20px)';
+            
+            const menuIcons = ['🍚', '🍲', '🥗', '🍖', '🥬', '🍉', '🥤', '🍞', '🥛', '🍎'];
+            const icon = menuIcons[index % menuIcons.length];
+            
+            menuDiv.innerHTML = `
+                <div class="flex items-center justify-center w-12 h-12 bg-white rounded-full mr-4 text-xl">
+                    ${icon}
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-gray-800">${item.trim()}</h3>
+                </div>
+            `;
+            
+            container.appendChild(menuDiv);
+            
+            // 애니메이션 효과
+            setTimeout(() => {
+                menuDiv.style.opacity = '1';
+                menuDiv.style.transform = 'translateY(0)';
+                menuDiv.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            }, index * 100);
+        });
+        
+        document.getElementById('mealSection').classList.remove('hidden');
+    }
+
+    // 급식 없음 표시
+    function showNoMeal() {
+        hideAllSections();
+        document.getElementById('noMealSection').classList.remove('hidden');
+    }
+
+    // 모든 섹션 숨기기
+    function hideAllSections() {
+        document.getElementById('loadingSection').classList.add('hidden');
+        document.getElementById('mealSection').classList.add('hidden');
+        document.getElementById('noMealSection').classList.add('hidden');
+        document.getElementById('errorSection').classList.add('hidden');
+    }
+
+    // 검색 리셋
+    function resetMealSearch() {
+        hideAllSections();
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        document.getElementById('mealDate').value = dateString;
+        fetchMealData();
+    }
+
+    // 이미지 다운로드
+    function downloadMealImage() {
+        if (!currentMealData || !currentDate) {
+            alert('급식 데이터가 없습니다.');
+            return;
+        }
+
+        const canvas = document.getElementById('mealCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 캔버스 초기화
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 1000, 1000);
+        
+        // 배경 그라데이션
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, '#f97316');
+        gradient.addColorStop(1, '#f59e0b');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1000, 200);
+        
+        // 제목
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 48px sans-serif';
+        ctx.textAlign = 'center';
+        
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        const isToday = currentDate === todayString;
+        
+        ctx.fillText(isToday ? '오늘의 급식' : '급식 메뉴', 500, 80);
+        
+        // 날짜
+        const dateObj = new Date(currentDate);
+        const formattedDate = dateObj.toLocaleDateString('ko-KR');
+        ctx.font = '32px sans-serif';
+        ctx.fillText(formattedDate, 500, 130);
+        
+        // 메뉴 아이템들
+        const menuItems = currentMealData.slice(1).filter(item => item && item.trim());
+        const menuIcons = ['🍚', '🍲', '🥗', '🍖', '🥬', '🍉', '🥤', '🍞', '🥛', '🍎'];
+        
+        let yPos = 280;
+        menuItems.forEach((item, index) => {
+            // 배경 박스
+            ctx.fillStyle = '#f9fafb';
+            ctx.fillRect(100, yPos - 40, 800, 80);
+            
+            // 테두리
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(100, yPos - 40, 800, 80);
+            
+            // 아이콘
+            ctx.font = '40px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(menuIcons[index % menuIcons.length], 180, yPos + 10);
+            
+            // 메뉴 텍스트
+            ctx.fillStyle = '#374151';
+            ctx.font = 'bold 36px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(item.trim(), 250, yPos + 10);
+            
+            yPos += 100;
+        });
+        
+        // 푸터
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('School Mate - 급식 정보', 500, 950);
+        
+        // 다운로드
+        const link = document.createElement('a');
+        link.download = `급식_${currentDate}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    // 날짜 입력 필드에 이벤트 리스너 추가 (엔터키로 조회)
+    document.getElementById('mealDate').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            fetchMealData();
+        }
+    });
+</script>
+{% endblock %}

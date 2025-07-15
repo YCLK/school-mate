@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}시간표 조회 - School Mate{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- 헤더 -->
+    <div class="gradient-bg rounded-2xl shadow-2xl p-8 mb-8 text-white">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4">
+                <i class="fas fa-calendar-alt mr-3"></i>시간표 조회
+            </h1>
+            <p class="text-lg md:text-xl opacity-90">
+                NEIS API를 통해 학교 시간표를 조회하고 이미지로 저장하세요
+            </p>
+        </div>
+    </div>
+
+    <!-- 학교 검색 섹션 -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-search mr-2 text-blue-600"></i>학교 검색
+        </h2>
+        
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <div class="flex-1">
+                <input type="text" id="schoolNameInput" placeholder="학교 이름을 입력하세요" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <button id="searchSchoolBtn" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                <i class="fas fa-search mr-2"></i>검색
+            </button>
+        </div>
+
+        <!-- 검색 결과 -->
+        <div id="schoolResults" class="hidden">
+            <h3 class="text-lg font-medium mb-3 text-gray-700">검색 결과</h3>
+            <div id="schoolList" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- 시간표 조회 폼 -->
+    <div id="timetableForm" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-calendar mr-2 text-purple-600"></i>시간표 조회
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">학년</label>
+                <select id="gradeSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <option value="">선택하세요</option>
+                    <option value="1">1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">반</label>
+                <input type="number" id="classInput" placeholder="반 번호" min="1" max="20"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">학기</label>
+                <select id="semesterSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <option value="">선택하세요</option>
+                    <option value="1">1학기</option>
+                    <option value="2">2학기</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">기준 날짜</label>
+                <input type="date" id="dateInput" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+            </div>
+        </div>
+        
+        <button id="getTimetableBtn" 
+                class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+            <i class="fas fa-calendar-check mr-2"></i>시간표 조회
+        </button>
+    </div>
+
+    <!-- 로딩 섹션 -->
+    <div id="loadingSection" class="hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center mb-6">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p class="text-lg text-gray-600">시간표 정보를 불러오고 있어요...</p>
+        </div>
+    </div>
+
+    <!-- 에러 메시지 -->
+    <div id="errorSection" class="hidden">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                <div>
+                    <h3 class="text-red-800 font-semibold">오류가 발생했습니다</h3>
+                    <p class="text-red-700 mt-1" id="errorMessage">시간표 정보를 불러올 수 없습니다.</p>
+                </div>
+            </div>
+            <button onclick="resetTimetableSearch()" 
+                    class="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">
+                <i class="fas fa-redo mr-2"></i>다시 시도
+            </button>
+        </div>
+    </div>
+
+    <!-- 시간표 표시 -->
+    <div id="timetableDisplay" class="hidden">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- 시간표 헤더 -->
+            <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 text-center">
+                <h2 class="text-2xl font-bold mb-2">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    <span id="timetableTitle">시간표</span>
+                </h2>
+                <p class="text-purple-100" id="timetableInfo">학교 정보가 여기에 표시됩니다</p>
+            </div>
+
+            <!-- 시간표 테이블 -->
+            <div class="p-6">
+                <div id="timetableTableContainer" class="mb-6 bg-gray-50 rounded-lg p-4">
+                    <div id="timetableTable" class="overflow-x-auto">
+                        <!-- 시간표가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 다운로드 버튼 -->
+            <div class="border-t border-gray-200 p-6 text-center">
+                <button onclick="downloadTimetableImage()" 
+                        class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-download mr-2"></i>이미지로 다운로드
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 시간표 없음 -->
+    <div id="noTimetableSection" class="hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <i class="fas fa-calendar-times text-yellow-500 text-6xl mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">시간표 정보가 없습니다</h2>
+            <p class="text-gray-600 mb-6">해당 조건에 맞는 시간표가 없습니다.</p>
+            <button onclick="resetTimetableSearch()" 
+                    class="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors">
+                <i class="fas fa-redo mr-2"></i>다시 조회
+            </button>
+        </div>
+    </div>
+
+    <!-- 숨겨진 캔버스 (이미지 생성용) -->
+    <canvas id="timetableCanvas" width="1200" height="800" style="display: none;"></canvas>
+</div>
+
+<script>
+class TimetableManager {
+    constructor() {
+        this.selectedSchool = null;
+        this.currentTimetable = null;
+        this.currentWeekRange = null;
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.setCurrentDate();
+    }
+
+    setupEventListeners() {
+        document.getElementById('searchSchoolBtn').addEventListener('click', () => this.searchSchool());
+        document.getElementById('schoolNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.searchSchool();
+        });
+        document.getElementById('getTimetableBtn').addEventListener('click', () => this.getTimetable());
+    }
+
+    setCurrentDate() {
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('dateInput').value = formattedDate;
+    }
+
+    showLoading() {
+        this.hideAllSections();
+        document.getElementById('loadingSection').classList.remove('hidden');
+    }
+
+    showError(message) {
+        this.hideAllSections();
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorSection').classList.remove('hidden');
+    }
+
+    hideAllSections() {
+        document.getElementById('loadingSection').classList.add('hidden');
+        document.getElementById('timetableDisplay').classList.add('hidden');
+        document.getElementById('noTimetableSection').classList.add('hidden');
+        document.getElementById('errorSection').classList.add('hidden');
+    }
+
+    async searchSchool() {
+        const schoolName = document.getElementById('schoolNameInput').value.trim();
+        
+        if (!schoolName) {
+            this.showError('학교 이름을 입력해주세요.');
+            return;
+        }
+
+        this.showLoading();
+
+        try {
+            const response = await fetch('/search_school', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ school_name: schoolName })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.displaySchoolResults(data.schools);
+                this.hideAllSections();
+            } else {
+                this.showError(data.error || '학교 검색에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('학교 검색 오류:', error);
+            this.showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+    }
+
+    displaySchoolResults(schools) {
+        const schoolResults = document.getElementById('schoolResults');
+        const schoolList = document.getElementById('schoolList');
+        
+        schoolList.innerHTML = '';
+        
+        if (schools.length === 0) {
+            schoolList.innerHTML = '<p class="text-gray-500">검색 결과가 없습니다.</p>';
+        } else {
+            schools.forEach(school => {
+                const schoolItem = document.createElement('div');
+                schoolItem.className = 'p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
+                schoolItem.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-medium text-gray-800">${school.SCHUL_NM}</h4>
+                            <p class="text-sm text-gray-600">${school.ATPT_OFCDC_SC_NM} | ${school.SCHUL_KND_SC_NM}</p>
+                            <p class="text-xs text-gray-500 mt-1">${school.ORG_RDNMA || ''}</p>
+                        </div>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                            선택
+                        </button>
+                    </div>
+                `;
+                
+                schoolItem.addEventListener('click', () => this.selectSchool(school));
+                schoolList.appendChild(schoolItem);
+            });
+        }
+        
+        schoolResults.classList.remove('hidden');
+    }
+
+    selectSchool(school) {
+        this.selectedSchool = school;
+        
+        // 선택된 학교 표시
+        document.getElementById('schoolNameInput').value = school.SCHUL_NM;
+        document.getElementById('schoolResults').classList.add('hidden');
+        document.getElementById('timetableForm').classList.remove('hidden');
+        
+        // 포커스를 시간표 폼으로 이동
+        document.getElementById('timetableForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async getTimetable() {
+        if (!this.selectedSchool) {
+            this.showError('학교를 먼저 선택해주세요.');
+            return;
+        }
+
+        const grade = document.getElementById('gradeSelect').value;
+        const classNm = document.getElementById('classInput').value;
+        const semester = document.getElementById('semesterSelect').value;
+        const date = document.getElementById('dateInput').value;
+
+        // 입력값 검증
+        if (!grade || !classNm || !semester || !date) {
+            this.showError('모든 필드를 입력해주세요.');
+            return;
+        }
+
+        // 반 번호 검증 (1-20 범위)
+        const classNum = parseInt(classNm);
+        if (isNaN(classNum) || classNum < 1 || classNum > 20) {
+            this.showError('반 번호는 1~20 사이의 숫자여야 합니다.');
+            return;
+        }
+
+        this.showLoading();
+
+        try {
+            const formattedDate = date.replace(/-/g, '');
+            
+            const response = await fetch('/get_timetable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    atpt_code: this.selectedSchool.ATPT_OFCDC_SC_CODE,
+                    school_code: this.selectedSchool.SD_SCHUL_CODE,
+                    grade: grade,
+                    class_nm: classNm,
+                    semester: semester,
+                    date: formattedDate
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.timetable && Object.keys(data.timetable).length > 0) {
+                    this.displayTimetable(data.timetable, data.week_range);
+                } else {
+                    this.hideAllSections();
+                    document.getElementById('noTimetableSection').classList.remove('hidden');
+                }
+            } else {
+                this.showError(data.error || '시간표 조회에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('시간표 조회 오류:', error);
+            this.showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+    }
+
+    displayTimetable(timetable, weekRange) {
+        this.currentTimetable = timetable;
+        this.currentWeekRange = weekRange;
+        
+        const grade = document.getElementById('gradeSelect').value;
+        const classNm = document.getElementById('classInput').value;
+        const semester = document.getElementById('semesterSelect').value;
+        
+        // 헤더 정보 업데이트
+        document.getElementById('timetableTitle').textContent = `${grade}학년 ${classNm}반 시간표`;
+        document.getElementById('timetableInfo').textContent = `${this.selectedSchool.SCHUL_NM} | ${semester}학기 | ${weekRange}`;
+
+        // 시간표 테이블 생성
+        this.createTimetableTable(timetable);
+        
+        this.hideAllSections();
+        document.getElementById('timetableDisplay').classList.remove('hidden');
+        
+        // 시간표 결과로 스크롤
+        document.getElementById('timetableDisplay').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    createTimetableTable(timetable) {
+        const tableContainer = document.getElementById('timetableTable');
+        const days = ['월', '화', '수', '목', '금'];
+        const periods = [1, 2, 3, 4, 5, 6, 7];
+        
+        // 시간표 데이터 확인
+        const hasData = Object.keys(timetable).some(day => 
+            Object.keys(timetable[day] || {}).length > 0
+        );
+        
+        if (!hasData) {
+            this.hideAllSections();
+            document.getElementById('noTimetableSection').classList.remove('hidden');
+            return;
+        }
+
+        let tableHTML = `
+            <table class="w-full border-collapse bg-white rounded-lg shadow-sm overflow-hidden">
+                <thead>
+                    <tr class="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+                        <th class="border border-gray-300 p-4 text-center font-bold text-lg">교시</th>
+                        ${days.map(day => `
+                            <th class="border border-gray-300 p-4 text-center font-bold text-lg">${day}요일</th>
+                        `).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        periods.forEach((period, index) => {
+            const rowClass = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+            tableHTML += `<tr class="${rowClass}">`;
+            tableHTML += `
+                <td class="border border-gray-300 p-4 text-center font-semibold text-gray-700 bg-gradient-to-r from-gray-100 to-gray-200">
+                    ${period}교시
+                </td>
+            `;
+            
+            days.forEach(day => {
+                const subject = timetable[day] && timetable[day][period] ? timetable[day][period] : '';
+                const cellClass = subject ? 'bg-blue-50 text-blue-800' : 'text-gray-400';
+                const displayText = subject || '-';
+                
+                tableHTML += `
+                    <td class="border border-gray-300 p-4 text-center font-medium ${cellClass} hover:bg-blue-100 transition-colors">
+                        ${displayText}
+                    </td>
+                `;
+            });
+            
+            tableHTML += `</tr>`;
+        });
+
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+
+        tableContainer.innerHTML = tableHTML;
+    }
+}
+
+// 이미지 다운로드 함수
+function downloadTimetableImage() {
+    const timetableManager = window.timetableManager;
+    
+    if (!timetableManager.currentTimetable) {
+        alert('다운로드할 시간표가 없습니다.');
+        return;
+    }
+
+    const canvas = document.getElementById('timetableCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 캔버스 크기 설정
+    canvas.width = 1200;
+    canvas.height = 800;
+    
+    // 배경색 설정
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 헤더 배경 그라데이션
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    gradient.addColorStop(0, '#8b5cf6');
+    gradient.addColorStop(1, '#3b82f6');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, 120);
+    
+    // 제목
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px sans-serif';
+    ctx.textAlign = 'center';
+    
+    const grade = document.getElementById('gradeSelect').value;
+    const classNm = document.getElementById('classInput').value;
+    ctx.fillText(`${grade}학년 ${classNm}반 시간표`, canvas.width / 2, 50);
+    
+    // 부제목
+    ctx.font = '20px sans-serif';
+    const schoolName = timetableManager.selectedSchool.SCHUL_NM;
+    const semester = document.getElementById('semesterSelect').value;
+    ctx.fillText(`${schoolName} | ${semester}학기 | ${timetableManager.currentWeekRange}`, canvas.width / 2, 85);
+    
+    // 시간표 그리기
+    const startY = 150;
+    const cellWidth = 180;
+    const cellHeight = 60;
+    const days = ['교시', '월요일', '화요일', '수요일', '목요일', '금요일'];
+    const periods = [1, 2, 3, 4, 5, 6, 7];
+    
+    // 헤더 그리기
+    days.forEach((day, index) => {
+        const x = index * cellWidth + 60;
+        const y = startY;
+        
+        // 헤더 배경
+        const headerGradient = ctx.createLinearGradient(x, y, x, y + cellHeight);
+        headerGradient.addColorStop(0, '#6366f1');
+        headerGradient.addColorStop(1, '#4f46e5');
+        ctx.fillStyle = headerGradient;
+        ctx.fillRect(x, y, cellWidth, cellHeight);
+        
+        // 헤더 테두리
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, cellWidth, cellHeight);
+        
+        // 헤더 텍스트
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(day, x + cellWidth / 2, y + cellHeight / 2 + 6);
+    });
+    
+    // 시간표 내용 그리기
+    periods.forEach((period, rowIndex) => {
+        const y = startY + (rowIndex + 1) * cellHeight;
+        
+        // 교시 셀
+        const timeX = 60;
+        ctx.fillStyle = rowIndex % 2 === 0 ? '#f3f4f6' : '#e5e7eb';
+        ctx.fillRect(timeX, y, cellWidth, cellHeight);
+        
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(timeX, y, cellWidth, cellHeight);
+        
+        ctx.fillStyle = '#374151';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${period}교시`, timeX + cellWidth / 2, y + cellHeight / 2 + 6);
+        
+        // 과목 셀들
+        ['월', '화', '수', '목', '금'].forEach((day, colIndex) => {
+            const x = (colIndex + 1) * cellWidth + 60;
+            const subject = timetableManager.currentTimetable[day] && timetableManager.currentTimetable[day][period] 
+                ? timetableManager.currentTimetable[day][period] : '';
+            
+            // 셀 배경
+            if (subject) {
+                ctx.fillStyle = '#dbeafe';
+            } else {
+                ctx.fillStyle = rowIndex % 2 === 0 ? '#ffffff' : '#f9fafb';
+            }
+            ctx.fillRect(x, y, cellWidth, cellHeight);
+            
+            // 셀 테두리
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, cellWidth, cellHeight);
+            
+            // 텍스트
+            ctx.fillStyle = subject ? '#1e40af' : '#9ca3af';
+            ctx.font = subject ? 'bold 14px sans-serif' : '14px sans-serif';
+            ctx.textAlign = 'center';
+            
+            const displayText = subject || '-';
+            // 텍스트가 길 경우 줄바꿈
+            if (displayText.length > 8) {
+                const words = displayText.split(' ');
+                if (words.length > 1) {
+                    const line1 = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+                    const line2 = words.slice(Math.ceil(words.length / 2)).join(' ');
+                    ctx.fillText(line1, x + cellWidth / 2, y + cellHeight / 2 - 8);
+                    ctx.fillText(line2, x + cellWidth / 2, y + cellHeight / 2 + 8);
+                } else {
+                    ctx.fillText(displayText, x + cellWidth / 2, y + cellHeight / 2 + 6);
+                }
+            } else {
+                ctx.fillText(displayText, x + cellWidth / 2, y + cellHeight / 2 + 6);
+            }
+        });
+    });
+    
+    // 푸터
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('School Mate - 시간표 조회', canvas.width / 2, canvas.height - 30);
+    
+    // 다운로드
+    const link = document.createElement('a');
+    link.download = `시간표_${timetableManager.selectedSchool.SCHUL_NM}_${grade}학년_${classNm}반.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// 검색 리셋 함수
+function resetTimetableSearch() {
+    window.timetableManager.hideAllSections();
+    document.getElementById('timetableForm').classList.add('hidden');
+    document.getElementById('schoolResults').classList.add('hidden');
+    document.getElementById('schoolNameInput').value = '';
+    document.getElementById('gradeSelect').value = '';
+    document.getElementById('classInput').value = '';
+    document.getElementById('semesterSelect').value = '';
+    
+    const today = new Date();
+    const dateString = today.toISOString().split('T')[0];
+    document.getElementById('dateInput').value = dateString;
+    
+    window.timetableManager.selectedSchool = null;
+    window.timetableManager.currentTimetable = null;
+    window.timetableManager.currentWeekRange = null;
+}
+
+// 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    window.timetableManager = new TimetableManager();
+});
+</script>
+{% endblock %}

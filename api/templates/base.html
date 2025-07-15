@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}School Mate - 더 나은 학교생활{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 네비게이션 바 -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="text-white font-bold text-xl">
+                        <i class="fas fa-school mr-2"></i>School Mate
+                    </a>
+                </div>
+                
+                <!-- 데스크톱 메뉴 -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="{{ url_for('index') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-home mr-1"></i>홈
+                        </a>
+                        <a href="{{ url_for('community') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-comments mr-1"></i>커뮤니티
+                        </a>
+                        <a href="{{ url_for('meal') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-utensils mr-1"></i>급식
+                        </a>
+                        <a href="{{ url_for('resources') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-book mr-1"></i>학습자료
+                        </a>
+                        <a href="{{ url_for('schedule') }}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-calendar mr-1"></i>시간표
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 모바일 메뉴 버튼 -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-white hover:text-gray-200 p-2">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 모바일 메뉴 -->
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white bg-opacity-10">
+                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-home mr-2"></i>홈
+                </a>
+                <a href="{{ url_for('community') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-comments mr-2"></i>커뮤니티
+                </a>
+                <a href="{{ url_for('meal') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-utensils mr-2"></i>급식
+                </a>
+                <a href="{{ url_for('resources') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-book mr-2"></i>학습자료
+                </a>
+                <a href="{{ url_for('schedule') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-calendar mr-2"></i>시간표
+                </a>
+                <a href="{{ url_for('groups') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-users mr-2"></i>모둠
+                </a>
+                <a href="{{ url_for('seating') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-chair mr-2"></i>자리바꾸기
+                </a>
+                <a href="{{ url_for('lottery') }}" class="text-white hover:text-gray-200 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-random mr-2"></i>뽑기
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h3 class="text-lg font-semibold mb-2">School Mate</h3>
+                <p class="text-gray-400 text-sm">더 나은 학교생활을 위한 통합 플랫폼</p>
+                <div class="mt-4 flex justify-center space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+                <p class="text-gray-500 text-xs mt-4">© 2024 School Mate. 교내 헤커톤 프로젝트</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 모바일 메뉴 토글
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 스크롤 시 네비게이션 바 그림자 효과
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-xl');
+            } else {
+                nav.classList.remove('shadow-xl');
+            }
+        });
+    </script>
+</body>
+</html>

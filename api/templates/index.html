@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- 히어로 섹션 -->
+    <div class="gradient-bg rounded-2xl shadow-2xl p-8 mb-12 text-white">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                School Mate
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">
+                더 나은 학교생활을 위한 통합 플랫폼
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ url_for('community') }}" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-comments mr-2"></i>커뮤니티 시작하기
+                </a>
+                <a href="{{ url_for('schedule') }}" class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition-colors">
+                    <i class="fas fa-calendar mr-2"></i>시간표 확인하기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 주요 기능 카드 -->
+    <div class="mb-12">
+        <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">주요 기능</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 커뮤니티 & 급식 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
+                    <i class="fas fa-comments text-blue-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">커뮤니티 & 급식</h3>
+                <p class="text-gray-600 mb-4">학교 소식을 공유하고 오늘의 급식 메뉴를 확인하세요.</p>
+                <a href="{{ url_for('community') }}" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                    자세히 보기 <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- 학습 자료 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
+                    <i class="fas fa-book text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">학습 자료</h3>
+                <p class="text-gray-600 mb-4">교과서 PDF와 학습 자료를 쉽게 다운로드하세요.</p>
+                <a href="{{ url_for('resources') }}" class="text-green-600 hover:text-green-800 font-medium inline-flex items-center">
+                    자세히 보기 <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- 시간표 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
+                    <i class="fas fa-calendar text-purple-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">시간표</h3>
+                <p class="text-gray-600 mb-4">NEIS API를 통해 시간표를 가져와 예쁜 이미지로 저장하세요.</p>
+                <a href="{{ url_for('schedule') }}" class="text-purple-600 hover:text-purple-800 font-medium inline-flex items-center">
+                    자세히 보기 <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- 모둠 만들기 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
+                    <i class="fas fa-users text-orange-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">모둠 만들기</h3>
+                <p class="text-gray-600 mb-4">수업 시간에 활용할 수 있는 모둠을 자동으로 만들어보세요.</p>
+                <a href="{{ url_for('groups') }}" class="text-orange-600 hover:text-orange-800 font-medium inline-flex items-center">
+                    자세히 보기 <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- 자리 바꾸기 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg mb-4">
+                    <i class="fas fa-chair text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">자리 바꾸기</h3>
+                <p class="text-gray-600 mb-4">교실 자리를 공정하게 배치하고 관리하세요.</p>
+                <a href="{{ url_for('seating') }}" class="text-red-600 hover:text-red-800 font-medium inline-flex items-center">
+                    자세히 보기 <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- 뽑기 -->
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-lg mb-4">
+                    <i class="fas fa-random text-indigo-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">뽑기</h3>
+                <p class="text-gray-600 mb-4">발표자 선정이나 다양한 활동에 활용할 수 있는 뽑기 기능입니다.</p>
+                <a href="{{ url_for('lottery') }}" class="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center">
+                    자세히 보기 <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 카드 애니메이션
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card-hover');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        cards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}
