@@ -199,11 +199,9 @@ def get_timetable(atpt_code, school_code, grade, class_nm, semester, date_str):
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
 
-# MongoDB 연결
-MONGODB_URL = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/community"
-client = MongoClient(MONGODB_URL)
-db = client.community
-posts_collection = db.posts
+app = Flask(__name__)    #플라스크 객체(서버) 생성
+app.config["MONGO_URI"] = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/community"
+mongo = PyMongo(app)     #mongo 변수를 통해 DB(community)에 접근 가능
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -226,7 +224,7 @@ def community():
                 'content': content,
                 'timestamp': datetime.now()
             }
-            posts_collection.insert_one(post)
+            mongo.db.posts.insert_one(post)
         
         return redirect(url_for('community'))
     
@@ -236,13 +234,13 @@ def community():
     if post_id:
         # 특정 게시글 보기
         try:
-            detail_post = posts_collection.find_one({'_id': ObjectId(post_id)})
+            detail_post = mongo.db.posts.find_one({'_id': ObjectId(post_id)})
             return render_template('community.html', detail_post=detail_post)
         except:
             return redirect(url_for('community'))
     else:
         # 전체 게시글 목록 보기
-        posts = list(posts_collection.find().sort('timestamp', -1))
+        posts = list(mongo.db.posts.find().sort('timestamp', -1))
         return render_template('community.html', posts=posts)
 
 @app.route('/get_meal', methods=['POST'])
