@@ -4,21 +4,26 @@ from datetime import datetime, timedelta
 import requests
 import logging
 import os
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
-def getMeal(date, atpt_code="D10", school_code="7240394"):
+mongo_uri = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/"
+client = MongoClient(mongo_uri)
+db = client["schoolmate"]
+posts_collection = db["community_posts"]
+
+def getMeal(date):
     """
     특정 날짜의 급식 정보를 가져오는 함수
     Args:
         date (str): YYYYMMDD 형식의 날짜
-        atpt_code (str): 시도교육청코드 (기본값: D10 - 대구광역시교육청)
-        school_code (str): 학교코드 (기본값: 7240394)
     Returns:
         list: 급식 메뉴 리스트 (첫 번째 요소는 날짜)
     """
     try:
         # NEIS API를 통해 급식 정보 조회
         response = requests.get(
-            f"https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=417cfd38cd41410091cd4bb11ee814d2&ATPT_OFCDC_SC_CODE={atpt_code}&SD_SCHUL_CODE={school_code}&MLSV_YMD={date}",
+            f"https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=417cfd38cd41410091cd4bb11ee814d2&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240394&MLSV_YMD={date}",
             timeout=10
         )
         
@@ -75,36 +80,6 @@ def search_school(school_name):
         logging.error(f"학교 검색 오류: {str(e)}")
         return []
 
-def get_school_info(atpt_code, school_code):
-    """
-    학교 상세 정보를 가져오는 함수
-    Args:
-        atpt_code (str): 시도교육청코드
-        school_code (str): 학교코드
-    Returns:
-        dict: 학교 정보 또는 None
-    """
-    try:
-        response = requests.get(
-            f"https://open.neis.go.kr/hub/schoolInfo?Type=json&ATPT_OFCDC_SC_CODE={atpt_code}&SD_SCHUL_CODE={school_code}",
-            timeout=10
-        )
-        
-        if response.status_code != 200:
-            return None
-        
-        data = response.json()
-        
-        if 'schoolInfo' not in data or len(data['schoolInfo']) < 2:
-            return None
-        
-        schools = data['schoolInfo'][1].get('row', [])
-        return schools[0] if schools else None
-        
-    except Exception as e:
-        logging.error(f"학교 정보 조회 오류: {str(e)}")
-        return None
-
 def get_week_range(date_str):
     """
     주어진 날짜의 주 범위 (월요일-금요일)를 반환하는 함수
@@ -129,18 +104,6 @@ def get_week_range(date_str):
         return None, None
 
 def get_timetable(atpt_code, school_code, grade, class_nm, semester, date_str):
-    """
-    시간표 정보를 가져오는 함수
-    Args:
-        atpt_code (str): 시도교육청코드
-        school_code (str): 학교코드
-        grade (str): 학년
-        class_nm (str): 반
-        semester (str): 학기
-        date_str (str): 조회할 날짜 (YYYYMMDD)
-    Returns:
-        dict: 시간표 정보
-    """
     try:
         monday, friday = get_week_range(date_str)
         
@@ -204,13 +167,33 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template('index.html')
 
-@app.route('/community')
+@app.route('/community', methods=['GET', 'POST'])
 def community():
-    return render_template('community.html')
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        if title and content:
+            post = {
+                'title': title,
+                'content': content,
+                'timestamp': datetime.now()
+            }
+            posts_collection.insert_one(post)
+            return redirect(url_for('community'))
+
+    post_id = request.args.get('post_id')
+    detail_post = None
+    if post_id:
+        try:
+            detail_post = posts_collection.find_one({'_id': ObjectId(post_id)})
+        except Exception:
+            detail_post = None
+
+    posts = list(posts_collection.find().sort("timestamp", -1))
+    return render_template('community.html', posts=posts, detail_post=detail_post)
 
 @app.route('/get_meal', methods=['POST'])
 def get_meal_api():
-    """급식 조회 API - 학교별 급식 지원"""
     try:
         data = request.get_json()
         
@@ -221,8 +204,6 @@ def get_meal_api():
             }), 400
         
         date = data.get('date')
-        atpt_code = data.get('atpt_code', 'D10')  # 기본값: 대구광역시교육청
-        school_code = data.get('school_code', '7240394')  # 기본값
         
         if not date:
             return jsonify({
@@ -246,31 +227,21 @@ def get_meal_api():
                 'error': '유효하지 않은 날짜입니다.'
             }), 400
         
-        # 학교 정보 조회
-        school_info = get_school_info(atpt_code, school_code)
-        school_name = school_info.get('SCHUL_NM', '알 수 없는 학교') if school_info else '알 수 없는 학교'
-        
-        # getMeal 함수 호출 (학교별 급식 조회)
-        meal_data = getMeal(date, atpt_code, school_code)
+        # getMeal 함수 호출
+        meal_data = getMeal(date)
         
         if not meal_data or meal_data == ['급식 없음']:
             return jsonify({
                 'success': True,
                 'meal_data': [],
                 'date': date,
-                'school_name': school_name,
-                'atpt_code': atpt_code,
-                'school_code': school_code,
                 'message': '해당 날짜에는 급식이 제공되지 않습니다.'
             })
         
         return jsonify({
             'success': True,
             'meal_data': meal_data,
-            'date': date,
-            'school_name': school_name,
-            'atpt_code': atpt_code,
-            'school_code': school_code
+            'date': date
         })
         
     except Exception as e:
@@ -304,7 +275,7 @@ def seating():
 def lottery():
     return render_template('lottery.html')
 
-# 학교 검색 및 시간표 관련 라우트들
+# 새로운 시간표 관련 라우트들
 @app.route('/search_school', methods=['POST'])
 def search_school_api():
     """학교 검색 API"""
@@ -330,40 +301,6 @@ def search_school_api():
         return jsonify({
             'success': False,
             'error': f'학교 검색 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-@app.route('/get_school_info', methods=['POST'])
-def get_school_info_api():
-    """학교 정보 조회 API"""
-    try:
-        data = request.get_json()
-        atpt_code = data.get('atpt_code')
-        school_code = data.get('school_code')
-        
-        if not atpt_code or not school_code:
-            return jsonify({
-                'success': False,
-                'error': '시도교육청코드와 학교코드가 필요합니다.'
-            }), 400
-        
-        school_info = get_school_info(atpt_code, school_code)
-        
-        if not school_info:
-            return jsonify({
-                'success': False,
-                'error': '학교 정보를 찾을 수 없습니다.'
-            }), 404
-        
-        return jsonify({
-            'success': True,
-            'school_info': school_info
-        })
-        
-    except Exception as e:
-        logging.error(f"학교 정보 조회 중 오류 발생: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': f'학교 정보 조회 중 오류가 발생했습니다: {str(e)}'
         }), 500
 
 @app.route('/get_timetable', methods=['POST'])
@@ -396,41 +333,4 @@ def get_timetable_api():
         return jsonify({
             'success': False,
             'error': f'시간표 조회 중 오류가 발생했습니다: {str(e)}'
-        }), 500
-
-@app.route('/set_default_school', methods=['POST'])
-def set_default_school_api():
-    """기본 학교 설정 API (세션 저장용)"""
-    try:
-        data = request.get_json()
-        atpt_code = data.get('atpt_code')
-        school_code = data.get('school_code')
-        
-        if not atpt_code or not school_code:
-            return jsonify({
-                'success': False,
-                'error': '시도교육청코드와 학교코드가 필요합니다.'
-            }), 400
-        
-        # 학교 정보 검증
-        school_info = get_school_info(atpt_code, school_code)
-        if not school_info:
-            return jsonify({
-                'success': False,
-                'error': '유효하지 않은 학교 정보입니다.'
-            }), 400
-        
-        # 세션에 기본 학교 정보 저장 (실제 구현에서는 세션 사용)
-        # 여기서는 단순히 성공 응답만 반환
-        return jsonify({
-            'success': True,
-            'message': '기본 학교가 설정되었습니다.',
-            'school_info': school_info
-        })
-        
-    except Exception as e:
-        logging.error(f"기본 학교 설정 중 오류 발생: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': f'기본 학교 설정 중 오류가 발생했습니다: {str(e)}'
         }), 500
