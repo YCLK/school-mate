@@ -2,126 +2,145 @@
 
 {% block content %}
 <div class="px-4 sm:px-0">
-    <!-- 헤더 -->
-    <div class="gradient-bg rounded-2xl shadow-2xl p-8 mb-8 text-white">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-3xl md:text-4xl font-bold mb-4">
-                <i class="fas fa-utensils mr-3"></i>급식 조회
-            </h1>
-            <p class="text-lg md:text-xl opacity-90">
-                NEIS API를 통해 학교 급식 정보를 조회하고 이미지로 저장하세요
-            </p>
-        </div>
-    </div>
-
-    <!-- 학교 검색 섹션 -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">
-            <i class="fas fa-search mr-2 text-orange-600"></i>학교 검색
-        </h2>
-        
-        <div class="flex flex-col sm:flex-row gap-4 mb-4">
-            <div class="flex-1">
-                <input type="text" id="schoolNameInput" placeholder="학교 이름을 입력하세요" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+    <!-- 메인 컨테이너 -->
+    <div class="max-w-4xl mx-auto">
+            <!-- 헤더 -->
+        <div class="gradient-bg rounded-2xl shadow-2xl p-8 mb-8 text-white">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-3xl md:text-4xl font-bold mb-4">
+                    <i class="fas fa-utensils mr-3"></i>급식 조회
+                </h1>
+                <p class="text-lg md:text-xl opacity-90">
+                    NEIS API를 통해 학교 급식 정보를 조회하고 이미지로 저장하세요
+                </p>
             </div>
-            <button id="searchSchoolBtn" 
-                    class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                <i class="fas fa-search mr-2"></i>검색
-            </button>
         </div>
-
-        <!-- 검색 결과 -->
-        <div id="schoolResults" class="hidden">
-            <h3 class="text-lg font-medium mb-3 text-gray-700">검색 결과</h3>
-            <div id="schoolList" class="space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- 급식 조회 폼 -->
-    <div id="mealForm" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden">
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">
-            <i class="fas fa-utensils mr-2 text-orange-600"></i>급식 조회
-        </h2>
-        
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <label class="text-sm font-medium text-gray-700">날짜 선택:</label>
-                <input type="date" id="mealDate" 
-                       class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+        <!-- 학교 검색 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-search text-blue-600 mr-2"></i>학교 검색
+            </h3>
+            <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                <div class="flex-1">
+                    <input type="text" id="schoolNameInput" placeholder="학교명을 입력하세요 (예: 대구소프트웨어고등학교)"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button id="searchSchoolBtn" 
+                        class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-search mr-2"></i>학교 검색
+                </button>
             </div>
-            <button onclick="fetchMealData()" id="fetchBtn" 
-                    class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition-all duration-300 transform hover:scale-105">
-                <i class="fas fa-search mr-2"></i>급식 조회
-            </button>
-        </div>
-    </div>
 
-    <!-- 에러 메시지 -->
-    <div id="errorSection" class="hidden">
-        <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
-                <div>
-                    <h3 class="text-red-800 font-semibold">오류가 발생했습니다</h3>
-                    <p class="text-red-700 mt-1" id="errorMessage">급식 정보를 불러올 수 없습니다.</p>
+            <!-- 검색 결과 -->
+            <div id="schoolResults" class="hidden">
+                <h4 class="text-lg font-medium mb-3 text-gray-700">검색 결과</h4>
+                <div id="schoolList" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- 선택된 학교 정보 -->
+        <div id="selectedSchoolInfo" class="hidden bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-check-circle text-green-600 mr-2"></i>선택된 학교
+            </h3>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-semibold text-green-800" id="selectedSchoolName">학교명</p>
+                        <p class="text-green-600 text-sm" id="selectedSchoolType">학교 유형</p>
+                        <p class="text-green-600 text-sm" id="selectedSchoolAddress">주소</p>
+                    </div>
+                    <button onclick="clearSelectedSchool()" class="text-red-500 hover:text-red-700 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
                 </div>
             </div>
-            <button onclick="resetMealSearch()" 
-                    class="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">
-                <i class="fas fa-redo mr-2"></i>다시 시도
-            </button>
         </div>
-    </div>
 
-    <!-- 로딩 -->
-    <div id="loadingSection" class="hidden">
-        <div class="bg-white rounded-xl shadow-lg p-8 text-center mb-6">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p class="text-lg text-gray-600">급식 정보를 불러오고 있어요...</p>
-        </div>
-    </div>
-
-    <!-- 급식 정보 표시 -->
-    <div id="mealSection" class="hidden">
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <!-- 급식 카드 헤더 -->
-            <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 text-center">
-                <h2 class="text-2xl font-bold mb-2">
-                    <i class="fas fa-calendar-day mr-2"></i>
-                    <span id="mealDateTitle">오늘의 급식</span>
-                </h2>
-                <p class="text-orange-100" id="mealSchoolInfo">학교 정보가 여기에 표시됩니다</p>
-                <p class="text-orange-100" id="mealDateSubtitle">2025년 7월 16일</p>
-            </div>
-
-            <!-- 급식 메뉴 -->
-            <div class="p-6">
-                <div id="mealMenuContainer" class="space-y-4">
-                    <!-- 메뉴 아이템들이 여기에 동적으로 생성됩니다 -->
+        <!-- 날짜 선택 및 급식 조회 -->
+        <div id="mealQuerySection" class="hidden bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-calendar text-orange-600 mr-2"></i>급식 조회
+            </h3>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <label class="text-sm font-medium text-gray-700">날짜 선택:</label>
+                    <input type="date" id="mealDate" 
+                           class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
                 </div>
-            </div>
-
-            <!-- 다운로드 버튼 -->
-            <div class="border-t border-gray-200 p-6 text-center">
-                <button onclick="downloadMealImage()" 
-                        class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105">
-                    <i class="fas fa-download mr-2"></i>이미지로 다운로드
+                <button onclick="fetchMealData()" id="fetchBtn" 
+                        class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-search mr-2"></i>급식 조회
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- 급식 없음 -->
-    <div id="noMealSection" class="hidden">
-        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-            <i class="fas fa-exclamation-triangle text-yellow-500 text-6xl mb-4"></i>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">급식 정보가 없습니다</h2>
-            <p class="text-gray-600 mb-6">해당 날짜에는 급식이 제공되지 않습니다.</p>
-            <button onclick="resetMealSearch()" 
-                    class="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors">
-                <i class="fas fa-redo mr-2"></i>다시 조회
-            </button>
+        <!-- 에러 메시지 -->
+        <div id="errorSection" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                    <div>
+                        <h3 class="text-red-800 font-semibold">오류가 발생했습니다</h3>
+                        <p class="text-red-700 mt-1" id="errorMessage">급식 정보를 불러올 수 없습니다.</p>
+                    </div>
+                </div>
+                <button onclick="resetMealSearch()" 
+                        class="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">
+                    <i class="fas fa-redo mr-2"></i>다시 시도
+                </button>
+            </div>
+        </div>
+
+        <!-- 로딩 -->
+        <div id="loadingSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 text-center mb-6">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p class="text-lg text-gray-600">급식 정보를 불러오고 있어요...</p>
+            </div>
+        </div>
+
+        <!-- 급식 정보 표시 -->
+        <div id="mealSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- 급식 카드 헤더 -->
+                <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 text-center">
+                    <h2 class="text-2xl font-bold mb-2">
+                        <i class="fas fa-calendar-day mr-2"></i>
+                        <span id="mealDateTitle">오늘의 급식</span>
+                    </h2>
+                    <p class="text-orange-100" id="mealDateSubtitle">2025년 7월 16일</p>
+                    <p class="text-orange-100 text-sm mt-1" id="mealSchoolName">학교명</p>
+                </div>
+
+                <!-- 급식 메뉴 -->
+                <div class="p-6">
+                    <div id="mealMenuContainer" class="space-y-4">
+                        <!-- 메뉴 아이템들이 여기에 동적으로 생성됩니다 -->
+                    </div>
+                </div>
+
+                <!-- 다운로드 버튼 -->
+                <div class="border-t border-gray-200 p-6 text-center">
+                    <button onclick="downloadMealImage()" 
+                            class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-download mr-2"></i>이미지로 다운로드
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 급식 없음 -->
+        <div id="noMealSection" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-6xl mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">급식 정보가 없습니다</h2>
+                <p class="text-gray-600 mb-6">해당 날짜에는 급식이 제공되지 않습니다.</p>
+                <button onclick="resetMealSearch()" 
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-redo mr-2"></i>다시 조회
+                </button>
+            </div>
         </div>
     </div>
 
@@ -130,263 +149,284 @@
 </div>
 
 <script>
-class MealManager {
-    constructor() {
-        this.selectedSchool = null;
-        this.currentMealData = null;
-        this.currentDate = null;
-        this.init();
-    }
-
-    init() {
-        this.setupEventListeners();
-        this.setCurrentDate();
-    }
-
-    setupEventListeners() {
-        document.getElementById('searchSchoolBtn').addEventListener('click', () => this.searchSchool());
-        document.getElementById('schoolNameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.searchSchool();
-        });
-        document.getElementById('mealDate').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.fetchMealData();
-        });
-    }
-
-    setCurrentDate() {
-        const today = new Date();
-        const dateString = today.toISOString().split('T')[0];
-        document.getElementById('mealDate').value = dateString;
-    }
-
-    showLoading() {
-        this.hideAllSections();
-        document.getElementById('loadingSection').classList.remove('hidden');
-    }
-
-    showError(message) {
-        this.hideAllSections();
-        document.getElementById('errorMessage').textContent = message;
-        document.getElementById('errorSection').classList.remove('hidden');
-    }
-
-    hideAllSections() {
-        document.getElementById('loadingSection').classList.add('hidden');
-        document.getElementById('mealSection').classList.add('hidden');
-        document.getElementById('noMealSection').classList.add('hidden');
-        document.getElementById('errorSection').classList.add('hidden');
-    }
-
-    async searchSchool() {
-        const schoolName = document.getElementById('schoolNameInput').value.trim();
-        
-        if (!schoolName) {
-            this.showError('학교 이름을 입력해주세요.');
-            return;
+    class MealManager {
+        constructor() {
+            this.selectedSchool = null;
+            this.currentMealData = null;
+            this.currentDate = null;
+            this.init();
         }
 
-        this.showLoading();
+        init() {
+            this.setupEventListeners();
+            this.setCurrentDate();
+        }
 
-        try {
-            const response = await fetch('/search_school', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ school_name: schoolName })
+        setupEventListeners() {
+            document.getElementById('searchSchoolBtn').addEventListener('click', () => this.searchSchool());
+            document.getElementById('schoolNameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.searchSchool();
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.displaySchoolResults(data.schools);
-                this.hideAllSections();
-            } else {
-                this.showError(data.error || '학교 검색에 실패했습니다.');
-            }
-        } catch (error) {
-            console.error('학교 검색 오류:', error);
-            this.showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+            document.getElementById('mealDate').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.fetchMealData();
+            });
         }
-    }
 
-    displaySchoolResults(schools) {
-        const schoolResults = document.getElementById('schoolResults');
-        const schoolList = document.getElementById('schoolList');
-        
-        schoolList.innerHTML = '';
-        
-        if (schools.length === 0) {
-            schoolList.innerHTML = '<p class="text-gray-500">검색 결과가 없습니다.</p>';
-        } else {
-            schools.forEach(school => {
-                const schoolItem = document.createElement('div');
-                schoolItem.className = 'p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
-                schoolItem.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-medium text-gray-800">${school.SCHUL_NM}</h4>
-                            <p class="text-sm text-gray-600">${school.ATPT_OFCDC_SC_NM} | ${school.SCHUL_KND_SC_NM}</p>
-                            <p class="text-xs text-gray-500 mt-1">${school.ORG_RDNMA || ''}</p>
+        setCurrentDate() {
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            document.getElementById('mealDate').value = dateString;
+        }
+
+        showLoading() {
+            this.hideAllSections();
+            document.getElementById('loadingSection').classList.remove('hidden');
+        }
+
+        showError(message) {
+            this.hideAllSections();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorSection').classList.remove('hidden');
+        }
+
+        hideAllSections() {
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('mealSection').classList.add('hidden');
+            document.getElementById('noMealSection').classList.add('hidden');
+            document.getElementById('errorSection').classList.add('hidden');
+        }
+
+        async searchSchool() {
+            const schoolName = document.getElementById('schoolNameInput').value.trim();
+            
+            if (!schoolName) {
+                this.showError('학교 이름을 입력해주세요.');
+                return;
+            }
+
+            this.showLoading();
+
+            try {
+                const response = await fetch('/search_school', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ school_name: schoolName })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.displaySchoolResults(data.schools);
+                    this.hideAllSections();
+                } else {
+                    this.showError(data.error || '학교 검색에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('학교 검색 오류:', error);
+                this.showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
+
+        displaySchoolResults(schools) {
+            const schoolResults = document.getElementById('schoolResults');
+            const schoolList = document.getElementById('schoolList');
+            
+            schoolList.innerHTML = '';
+            
+            if (schools.length === 0) {
+                schoolList.innerHTML = '<p class="text-gray-500 text-center py-4">검색 결과가 없습니다.</p>';
+            } else {
+                schools.forEach(school => {
+                    const schoolItem = document.createElement('div');
+                    schoolItem.className = 'p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
+                    schoolItem.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-medium text-gray-800">${school.SCHUL_NM}</h4>
+                                <p class="text-sm text-gray-600">${school.ATPT_OFCDC_SC_NM} | ${school.SCHUL_KND_SC_NM}</p>
+                                <p class="text-xs text-gray-500 mt-1">${school.ORG_RDNMA || ''}</p>
+                            </div>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                                선택
+                            </button>
                         </div>
-                        <button class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-sm transition-colors">
-                            선택
-                        </button>
+                    `;
+                    
+                    schoolItem.addEventListener('click', () => this.selectSchool(school));
+                    schoolList.appendChild(schoolItem);
+                });
+            }
+            
+            schoolResults.classList.remove('hidden');
+        }
+
+        selectSchool(school) {
+            this.selectedSchool = school;
+            
+            // 선택된 학교 정보 표시
+            document.getElementById('selectedSchoolName').textContent = school.SCHUL_NM;
+            document.getElementById('selectedSchoolType').textContent = `${school.ATPT_OFCDC_SC_NM} | ${school.SCHUL_KND_SC_NM}`;
+            document.getElementById('selectedSchoolAddress').textContent = school.ORG_RDNMA || '';
+            
+            // UI 업데이트
+            document.getElementById('schoolResults').classList.add('hidden');
+            document.getElementById('selectedSchoolInfo').classList.remove('hidden');
+            document.getElementById('mealQuerySection').classList.remove('hidden');
+            
+            // 오늘의 급식 자동 조회
+            this.fetchMealData();
+            
+            // 급식 조회 섹션으로 스크롤
+            document.getElementById('mealQuerySection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async fetchMealData() {
+            const dateInput = document.getElementById('mealDate').value;
+            if (!dateInput) {
+                this.showError('날짜를 선택해주세요.');
+                return;
+            }
+
+            if (!this.selectedSchool) {
+                this.showError('학교를 먼저 선택해주세요.');
+                return;
+            }
+
+            this.showLoading();
+            
+            try {
+                // 날짜를 YYYYMMDD 형식으로 변환
+                const formattedDate = dateInput.replace(/-/g, '');
+                
+                const response = await fetch('/get_meal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: formattedDate,
+                        atpt_code: this.selectedSchool.ATPT_OFCDC_SC_CODE,
+                        school_code: this.selectedSchool.SD_SCHUL_CODE
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.currentMealData = data.meal_data;
+                    this.currentDate = dateInput;
+                    
+                    if (!this.currentMealData || this.currentMealData.length === 0 || 
+                        (this.currentMealData.length === 1 && this.currentMealData[0].includes('급식 없음'))) {
+                        this.showNoMeal();
+                    } else {
+                        this.showMealData(this.currentMealData, dateInput);
+                    }
+                } else {
+                    this.showError(data.error || '급식 정보를 가져오는데 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('급식 데이터 조회 오류:', error);
+                this.showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
+
+        showMealData(mealData, date) {
+            this.hideAllSections();
+            
+            const dateObj = new Date(date);
+            const formattedDate = dateObj.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // 오늘 날짜인지 확인
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            const isToday = date === todayString;
+            
+            document.getElementById('mealDateTitle').textContent = isToday ? '오늘의 급식' : '급식 메뉴';
+            document.getElementById('mealDateSubtitle').textContent = formattedDate;
+            document.getElementById('mealSchoolName').textContent = this.selectedSchool.SCHUL_NM;
+            
+            const container = document.getElementById('mealMenuContainer');
+            container.innerHTML = '';
+            
+            // 날짜 정보 제외하고 메뉴만 표시
+            const menuItems = mealData.slice(1).filter(item => item && item.trim() && !item.includes('급식 없음'));
+            
+            if (menuItems.length === 0) {
+                this.showNoMeal();
+                return;
+            }
+            
+            menuItems.forEach((item, index) => {
+                const menuDiv = document.createElement('div');
+                menuDiv.className = 'flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+                menuDiv.style.opacity = '0';
+                menuDiv.style.transform = 'translateY(20px)';
+                
+                const menuIcons = ['🍚', '🍲', '🥗', '🍖', '🥬', '🍉', '🥤', '🍞', '🥛', '🍎'];
+                const icon = menuIcons[index % menuIcons.length];
+                
+                menuDiv.innerHTML = `
+                    <div class="flex items-center justify-center w-12 h-12 bg-white rounded-full mr-4 text-xl">
+                        ${icon}
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-800">${item.trim()}</h3>
                     </div>
                 `;
                 
-                schoolItem.addEventListener('click', () => this.selectSchool(school));
-                schoolList.appendChild(schoolItem);
-            });
-        }
-        
-        schoolResults.classList.remove('hidden');
-    }
-
-    selectSchool(school) {
-        this.selectedSchool = school;
-        
-        // 선택된 학교 표시
-        document.getElementById('schoolNameInput').value = school.SCHUL_NM;
-        document.getElementById('schoolResults').classList.add('hidden');
-        document.getElementById('mealForm').classList.remove('hidden');
-        
-        // 포커스를 급식 폼으로 이동
-        document.getElementById('mealForm').scrollIntoView({ behavior: 'smooth' });
-        
-        // 학교 선택 후 자동으로 오늘 급식 조회
-        this.fetchMealData();
-    }
-
-    async fetchMealData() {
-        if (!this.selectedSchool) {
-            this.showError('학교를 먼저 선택해주세요.');
-            return;
-        }
-
-        const dateInput = document.getElementById('mealDate').value;
-        if (!dateInput) {
-            this.showError('날짜를 선택해주세요.');
-            return;
-        }
-
-        this.showLoading();
-        
-        try {
-            // 날짜를 YYYYMMDD 형식으로 변환
-            const formattedDate = dateInput.replace(/-/g, '');
-            
-            // Flask 백엔드의 getMeal 함수 호출
-            const response = await fetch('/get_meal', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    atpt_code: this.selectedSchool.ATPT_OFCDC_SC_CODE,
-                    school_code: this.selectedSchool.SD_SCHUL_CODE,
-                    date: formattedDate
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.currentMealData = data.meal_data;
-                this.currentDate = dateInput;
+                container.appendChild(menuDiv);
                 
-                if (!this.currentMealData || this.currentMealData.length === 0 || 
-                    (this.currentMealData.length === 1 && this.currentMealData[0].includes('급식 없음'))) {
-                    this.showNoMeal();
-                } else {
-                    this.showMealData(this.currentMealData, dateInput);
-                }
-            } else {
-                this.showError(data.error || '급식 정보를 가져오는데 실패했습니다.');
-            }
-        } catch (error) {
-            console.error('Error fetching meal data:', error);
-            this.showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+                // 애니메이션 효과
+                setTimeout(() => {
+                    menuDiv.style.opacity = '1';
+                    menuDiv.style.transform = 'translateY(0)';
+                    menuDiv.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                }, index * 100);
+            });
+            
+            document.getElementById('mealSection').classList.remove('hidden');
+            
+            // 결과로 스크롤
+            document.getElementById('mealSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        showNoMeal() {
+            this.hideAllSections();
+            document.getElementById('noMealSection').classList.remove('hidden');
         }
     }
 
-    showMealData(mealData, date) {
-        this.hideAllSections();
-        
-        const dateObj = new Date(date);
-        const formattedDate = dateObj.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        // 오늘 날짜인지 확인
-        const today = new Date();
-        const todayString = today.toISOString().split('T')[0];
-        const isToday = date === todayString;
-        
-        document.getElementById('mealDateTitle').textContent = isToday ? '오늘의 급식' : '급식 메뉴';
-        document.getElementById('mealSchoolInfo').textContent = this.selectedSchool.SCHUL_NM;
-        document.getElementById('mealDateSubtitle').textContent = formattedDate;
-        
-        const container = document.getElementById('mealMenuContainer');
-        container.innerHTML = '';
-        
-        // 날짜 정보 제외하고 메뉴만 표시
-        const menuItems = mealData.slice(1).filter(item => item && item.trim());
-        
-        if (menuItems.length === 0) {
-            this.showNoMeal();
-            return;
-        }
-        
-        menuItems.forEach((item, index) => {
-            const menuDiv = document.createElement('div');
-            menuDiv.className = 'flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
-            menuDiv.style.opacity = '0';
-            menuDiv.style.transform = 'translateY(20px)';
-            
-            const menuIcons = ['🍚', '🍲', '🥗', '🍖', '🥬', '🍉', '🥤', '🍞', '🥛', '🍎'];
-            const icon = menuIcons[index % menuIcons.length];
-            
-            menuDiv.innerHTML = `
-                <div class="flex items-center justify-center w-12 h-12 bg-white rounded-full mr-4 text-xl">
-                    ${icon}
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-semibold text-gray-800">${item.trim()}</h3>
-                </div>
-            `;
-            
-            container.appendChild(menuDiv);
-            
-            // 애니메이션 효과
-            setTimeout(() => {
-                menuDiv.style.opacity = '1';
-                menuDiv.style.transform = 'translateY(0)';
-                menuDiv.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            }, index * 100);
-        });
-        
-        document.getElementById('mealSection').classList.remove('hidden');
+    // 전역 함수들
+    function clearSelectedSchool() {
+        window.mealManager.selectedSchool = null;
+        document.getElementById('selectedSchoolInfo').classList.add('hidden');
+        document.getElementById('mealQuerySection').classList.add('hidden');
+        window.mealManager.hideAllSections();
     }
 
-    showNoMeal() {
-        this.hideAllSections();
-        document.getElementById('noMealSection').classList.remove('hidden');
+    function fetchMealData() {
+        window.mealManager.fetchMealData();
     }
 
-    resetMealSearch() {
-        this.hideAllSections();
-        document.getElementById('mealForm').classList.add('hidden');
+    function resetMealSearch() {
+        window.mealManager.hideAllSections();
+        document.getElementById('selectedSchoolInfo').classList.add('hidden');
+        document.getElementById('mealQuerySection').classList.add('hidden');
         document.getElementById('schoolResults').classList.add('hidden');
         document.getElementById('schoolNameInput').value = '';
         
@@ -394,13 +434,13 @@ class MealManager {
         const dateString = today.toISOString().split('T')[0];
         document.getElementById('mealDate').value = dateString;
         
-        this.selectedSchool = null;
-        this.currentMealData = null;
-        this.currentDate = null;
+        window.mealManager.selectedSchool = null;
+        window.mealManager.currentMealData = null;
+        window.mealManager.currentDate = null;
     }
 
-    downloadMealImage() {
-        if (!this.currentMealData || !this.currentDate) {
+    function downloadMealImage() {
+        if (!window.mealManager.currentMealData || !window.mealManager.currentDate) {
             alert('급식 데이터가 없습니다.');
             return;
         }
@@ -426,22 +466,22 @@ class MealManager {
         
         const today = new Date();
         const todayString = today.toISOString().split('T')[0];
-        const isToday = this.currentDate === todayString;
+        const isToday = window.mealManager.currentDate === todayString;
         
         ctx.fillText(isToday ? '오늘의 급식' : '급식 메뉴', 500, 80);
         
-        // 학교명
-        ctx.font = '28px sans-serif';
-        ctx.fillText(this.selectedSchool.SCHUL_NM, 500, 120);
-        
         // 날짜
-        const dateObj = new Date(this.currentDate);
+        const dateObj = new Date(window.mealManager.currentDate);
         const formattedDate = dateObj.toLocaleDateString('ko-KR');
+        ctx.font = '32px sans-serif';
+        ctx.fillText(formattedDate, 500, 130);
+        
+        // 학교명
         ctx.font = '24px sans-serif';
-        ctx.fillText(formattedDate, 500, 160);
+        ctx.fillText(window.mealManager.selectedSchool.SCHUL_NM, 500, 170);
         
         // 메뉴 아이템들
-        const menuItems = this.currentMealData.slice(1).filter(item => item && item.trim());
+        const menuItems = window.mealManager.currentMealData.slice(1).filter(item => item && item.trim() && !item.includes('급식 없음'));
         const menuIcons = ['🍚', '🍲', '🥗', '🍖', '🥬', '🍉', '🥤', '🍞', '🥛', '🍎'];
         
         let yPos = 280;
@@ -477,30 +517,14 @@ class MealManager {
         
         // 다운로드
         const link = document.createElement('a');
-        link.download = `급식_${this.selectedSchool.SCHUL_NM}_${this.currentDate}.png`;
+        link.download = `급식_${window.mealManager.selectedSchool.SCHUL_NM}_${formattedDate}.png`;
         link.href = canvas.toDataURL();
         link.click();
     }
-}
 
-// 전역 함수들 (기존 코드와의 호환성을 위해)
-let mealManager;
-
-function fetchMealData() {
-    mealManager.fetchMealData();
-}
-
-function resetMealSearch() {
-    mealManager.resetMealSearch();
-}
-
-function downloadMealImage() {
-    mealManager.downloadMealImage();
-}
-
-// 초기화
-document.addEventListener('DOMContentLoaded', () => {
-    mealManager = new MealManager();
-});
+    // 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+        window.mealManager = new MealManager();
+    });
 </script>
 {% endblock %}
