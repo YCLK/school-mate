@@ -172,6 +172,7 @@ def index():
 
 @app.route('/community', methods=['GET', 'POST'])
 def community():
+    logging.warning("🔥 /community 진입 성공")
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
