@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import requests
 import logging
 import os
-from pymongo import MongoClient
+from flask_pymongo import PyMongo
 from bson import ObjectId
 import json
 
