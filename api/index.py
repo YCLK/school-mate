@@ -8,21 +8,6 @@ from pymongo import MongoClient
 from bson import ObjectId
 import json
 
-# MongoDB 설정 - 새로운 URL 사용
-try:
-    mongo_url = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/community?"
-    client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
-    # 연결 테스트
-    client.admin.command('ping')
-    db = client.community  # 데이터베이스 이름을 community로 변경
-    posts_collection = db.posts
-    logging.info("MongoDB 연결 성공")
-except Exception as e:
-    logging.error(f"MongoDB 연결 실패: {str(e)}")
-    client = None
-    db = None
-    posts_collection = None
-
 def getMeal(date, atpt_code="D10", school_code="7240394"):
     """
     특정 날짜의 급식 정보를 가져오는 함수
