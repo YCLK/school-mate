@@ -214,6 +214,12 @@ def get_timetable(atpt_code, school_code, grade, class_nm, semester, date_str):
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
 
+# MongoDB 연결
+MONGODB_URL = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/community"
+client = MongoClient(MONGODB_URL)
+db = client.community
+posts_collection = db.posts
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 
@@ -222,67 +228,37 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template('index.html')
 
-# 커뮤니티 라우트 추가
-@app.route('/community')
-@app.route('/community/<post_id>')
-def community(post_id=None):
-    """커뮤니티 페이지 - 게시글 목록 및 상세보기"""
-    try:
-        if post_id:
-            # 특정 게시글 상세보기
-            if posts_collection is None:
-                return render_template('community.html', error="데이터베이스 연결 오류")
-            
-            try:
-                post = posts_collection.find_one({"_id": ObjectId(post_id)})
-                if post:
-                    return render_template('community.html', detail_post=post)
-                else:
-                    return render_template('community.html', error="게시글을 찾을 수 없습니다.")
-            except Exception as e:
-                logging.error(f"게시글 조회 오류: {str(e)}")
-                return render_template('community.html', error="게시글 조회 중 오류가 발생했습니다.")
-        else:
-            # 게시글 목록 보기
-            if posts_collection is None:
-                return render_template('community.html', posts=[], error="데이터베이스 연결 오류")
-            
-            # 최신 게시글 순으로 정렬
-            posts = list(posts_collection.find().sort("timestamp", -1))
-            return render_template('community.html', posts=posts)
-            
-    except Exception as e:
-        logging.error(f"커뮤니티 페이지 오류: {str(e)}")
-        return render_template('community.html', posts=[], error="페이지 로딩 중 오류가 발생했습니다.")
-
-@app.route('/community', methods=['POST'])
-def create_post():
-    """새 게시글 작성"""
-    try:
-        if posts_collection is None:
-            return redirect(url_for('community'))
+@app.route('/community', methods=['GET', 'POST'])
+def community():
+    if request.method == 'POST':
+        # 새 게시글 작성
+        title = request.form.get('title')
+        content = request.form.get('content')
         
-        title = request.form.get('title', '').strip()
-        content = request.form.get('content', '').strip()
-        
-        if not title or not content:
-            return redirect(url_for('community'))
-        
-        # 게시글 데이터 생성
-        post_data = {
-            "title": title,
-            "content": content,
-            "timestamp": datetime.now()
-        }
-        
-        # 데이터베이스에 저장
-        posts_collection.insert_one(post_data)
+        if title and content:
+            post = {
+                'title': title,
+                'content': content,
+                'timestamp': datetime.now()
+            }
+            posts_collection.insert_one(post)
         
         return redirect(url_for('community'))
-        
-    except Exception as e:
-        logging.error(f"게시글 작성 오류: {str(e)}")
-        return redirect(url_for('community'))
+    
+    # GET 요청 처리
+    post_id = request.args.get('post_id')
+    
+    if post_id:
+        # 특정 게시글 보기
+        try:
+            detail_post = posts_collection.find_one({'_id': ObjectId(post_id)})
+            return render_template('community.html', detail_post=detail_post)
+        except:
+            return redirect(url_for('community'))
+    else:
+        # 전체 게시글 목록 보기
+        posts = list(posts_collection.find().sort('timestamp', -1))
+        return render_template('community.html', posts=posts)
 
 @app.route('/get_meal', methods=['POST'])
 def get_meal_api():
