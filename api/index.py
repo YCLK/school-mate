@@ -6,6 +6,8 @@ import logging
 import os
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
+
 
 mongo_uri = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/"
 client = MongoClient(mongo_uri)
@@ -167,6 +169,7 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template('index.html')
 
+
 @app.route('/community', methods=['GET', 'POST'])
 def community():
     if request.method == 'POST':
@@ -181,17 +184,18 @@ def community():
             posts_collection.insert_one(post)
             return redirect(url_for('community'))
 
+    # 글 상세보기 (안전하게 처리)
     post_id = request.args.get('post_id')
     detail_post = None
     if post_id:
         try:
             detail_post = posts_collection.find_one({'_id': ObjectId(post_id)})
-        except Exception:
+        except (InvalidId, Exception) as e:
+            logging.error(f"Invalid ObjectId: {post_id} / {e}")
             detail_post = None
 
     posts = list(posts_collection.find().sort("timestamp", -1))
     return render_template('community.html', posts=posts, detail_post=detail_post)
-
 @app.route('/get_meal', methods=['POST'])
 def get_meal_api():
     try:
