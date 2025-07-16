@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}익명 커뮤니티 - School Mate{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">익명 커뮤니티</h1>
+
+    {% if detail_post %}
+    <!-- 게시글 상세 보기 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ detail_post.title }}</h2>
+        <p class="text-sm text-gray-500 mb-6">
+            익명 ·
+            {% if detail_post.timestamp %}
+                {{ detail_post.timestamp.strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+                작성시간 없음
+            {% endif %}
+        </p>
+        <div class="text-gray-700 whitespace-pre-line">{{ detail_post.content }}</div>
+        <div class="mt-6">
+            <a href="{{ url_for('community') }}" class="text-blue-600 hover:underline">← 돌아가기</a>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- 글쓰기 폼 -->
+    <form method="POST" action="{{ url_for('community') }}" class="bg-white p-6 rounded-lg shadow-md space-y-4 mb-8">
+        <h2 class="text-xl font-semibold text-blue-600">글 작성</h2>
+
+        <div>
+            <label for="title" class="block text-sm font-medium text-gray-700">제목</label>
+            <input type="text" id="title" name="title" required
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <div>
+            <label for="content" class="block text-sm font-medium text-gray-700">내용</label>
+            <textarea id="content" name="content" rows="6" required
+                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">작성하기</button>
+        </div>
+    </form>
+
+    <!-- 게시글 목록 -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-blue-600 mb-4">게시판</h2>
+
+        {% if posts %}
+        <ul class="space-y-4">
+            {% for post in posts %}
+            <li>
+                <a href="{{ url_for('community', post_id=post._id|string) }}" class="text-lg text-blue-800 font-medium hover:underline">
+                    {{ post.title }}
+                </a>
+                <p class="text-sm text-gray-500">
+                    익명 ·
+                    {% if post.timestamp %}
+                        {{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                    {% else %}
+                        작성시간 없음
+                    {% endif %}
+                </p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-500">아직 작성된 글이 없습니다.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
