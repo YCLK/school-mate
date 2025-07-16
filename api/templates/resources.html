@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}교과서 자료 - School Mate{% endblock %}
+
+{% block content %}
+    <div class="px-4 sm:px-0">
+        <!-- 헤더 섹션 -->
+        <div class="gradient-bg rounded-2xl shadow-2xl p-8 mb-8 text-white">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-3xl md:text-5xl font-bold mb-4">
+                    <i class="fas fa-book mr-3"></i>교과서 자료
+                </h1>
+                <p class="text-lg md:text-xl opacity-90">
+                    고등학교 교과서 PDF 파일을 무료로 다운로드하세요
+                </p>
+            </div>
+        </div>
+
+        <!-- 검색 및 통계 -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none" 
+                       placeholder="교과서를 검색하세요..." id="searchInput">
+            </div>
+        </div>
+
+        <!-- 필터 탭 -->
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-2 justify-center">
+                <button class="filter-tab px-4 py-2 rounded-full border-2 border-purple-600 bg-purple-600 text-white font-medium transition-all hover:bg-purple-700" data-category="all">
+                    전체
+                </button>
+                <button class="filter-tab px-4 py-2 rounded-full border-2 border-gray-300 text-gray-600 font-medium transition-all hover:border-purple-600 hover:text-purple-600" data-category="reading">
+                    독서
+                </button>
+                <button class="filter-tab px-4 py-2 rounded-full border-2 border-gray-300 text-gray-600 font-medium transition-all hover:border-purple-600 hover:text-purple-600" data-category="math">
+                    수학
+                </button>
+                <button class="filter-tab px-4 py-2 rounded-full border-2 border-gray-300 text-gray-600 font-medium transition-all hover:border-purple-600 hover:text-purple-600" data-category="science">
+                    과학
+                </button>
+            </div>
+        </div>
+
+        <!-- 독서 카테고리 -->
+        <div class="category-section mb-12" data-category="reading">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-book-open text-red-600 mr-3"></i>독서
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="resource-card bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg mb-4">
+                        <i class="fas fa-file-pdf text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">독서 교과서</h3>
+                    <p class="text-gray-600 mb-4">고등학교 독서 교과서 - 다양한 글의 독해와 비판적 사고력 향상을 위한 필수 교재입니다.</p>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-file-pdf mr-1"></i>PDF</span>
+                        <span><i class="fas fa-download mr-1"></i>45.2MB</span>
+                        <span><i class="fas fa-star text-yellow-400 mr-1"></i>4.8</span>
+                    </div>
+                    <a href="https://dsm.yclk.me/sharing/jEvxuOHx7" target="_blank" 
+                       class="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>다운로드
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 수학 카테고리 -->
+        <div class="category-section mb-12" data-category="math">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-calculator text-blue-600 mr-3"></i>수학
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="resource-card bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
+                        <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">수학Ⅱ 교과서</h3>
+                    <p class="text-gray-600 mb-4">고등학교 수학Ⅱ 교과서 - 함수의 극한과 연속, 미분, 적분의 기본 개념을 다루는 교재입니다.</p>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-file-pdf mr-1"></i>PDF</span>
+                        <span><i class="fas fa-download mr-1"></i>38.7MB</span>
+                        <span><i class="fas fa-star text-yellow-400 mr-1"></i>4.9</span>
+                    </div>
+                    <a href="https://drive.google.com/file/d/1math2_textbook/view?usp=sharing" target="_blank" 
+                       class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>다운로드
+                    </a>
+                </div>
+
+                <div class="resource-card bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
+                        <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">미적분 교과서</h3>
+                    <p class="text-gray-600 mb-4">고등학교 미적분 교과서 - 수열의 극한, 미분법, 적분법의 심화 내용을 다루는 교재입니다.</p>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-file-pdf mr-1"></i>PDF</span>
+                        <span><i class="fas fa-download mr-1"></i>42.1MB</span>
+                        <span><i class="fas fa-star text-yellow-400 mr-1"></i>4.8</span>
+                    </div>
+                    <a href="https://drive.google.com/file/d/1calculus_textbook/view?usp=sharing" target="_blank" 
+                       class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>다운로드
+                    </a>
+                </div>
+
+                <div class="resource-card bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
+                        <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">확률과 통계 교과서</h3>
+                    <p class="text-gray-600 mb-4">고등학교 확률과 통계 교과서 - 순열과 조합, 확률, 통계의 기본 개념을 다루는 교재입니다.</p>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-file-pdf mr-1"></i>PDF</span>
+                        <span><i class="fas fa-download mr-1"></i>35.4MB</span>
+                        <span><i class="fas fa-star text-yellow-400 mr-1"></i>4.7</span>
+                    </div>
+                    <a href="https://drive.google.com/file/d/1probability_textbook/view?usp=sharing" target="_blank" 
+                       class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>다운로드
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 과학 카테고리 -->
+        <div class="category-section mb-12" data-category="science">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-microscope text-green-600 mr-3"></i>과학
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="resource-card bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
+                        <i class="fas fa-file-pdf text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">생명과학Ⅰ 교과서</h3>
+                    <p class="text-gray-600 mb-4">고등학교 생명과학Ⅰ 교과서 - 생명체의 특성, 세포, 물질대사, 항상성, 유전 등을 다루는 교재입니다.</p>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-file-pdf mr-1"></i>PDF</span>
+                        <span><i class="fas fa-download mr-1"></i>52.3MB</span>
+                        <span><i class="fas fa-star text-yellow-400 mr-1"></i>4.9</span>
+                    </div>
+                    <a href="https://drive.google.com/file/d/1biology1_textbook/view?usp=sharing" target="_blank" 
+                       class="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>다운로드
+                    </a>
+                </div>
+
+                <div class="resource-card bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
+                        <i class="fas fa-file-pdf text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">지구과학Ⅰ 교과서</h3>
+                    <p class="text-gray-600 mb-4">고등학교 지구과학Ⅰ 교과서 - 지구의 구조, 대기와 해양, 우주 등 지구과학의 기본 개념을 다루는 교재입니다.</p>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-file-pdf mr-1"></i>PDF</span>
+                        <span><i class="fas fa-download mr-1"></i>49.8MB</span>
+                        <span><i class="fas fa-star text-yellow-400 mr-1"></i>4.8</span>
+                    </div>
+                    <a href="https://drive.google.com/file/d/1earth_science1_textbook/view?usp=sharing" target="_blank" 
+                       class="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>다운로드
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        // 검색 기능
+        const searchInput = document.getElementById('searchInput');
+        const resourceCards = document.querySelectorAll('.resource-card');
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        const categorySections = document.querySelectorAll('.category-section');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            resourceCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // 필터 기능
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 활성 탭 변경
+                filterTabs.forEach(t => {
+                    t.classList.remove('bg-purple-600', 'text-white');
+                    t.classList.add('border-gray-300', 'text-gray-600');
+                });
+                this.classList.add('bg-purple-600', 'text-white');
+                this.classList.remove('border-gray-300', 'text-gray-600');
+                
+                const category = this.dataset.category;
+                
+                if (category === 'all') {
+                    // 모든 카테고리 섹션 보이기
+                    categorySections.forEach(section => {
+                        section.style.display = 'block';
+                    });
+                } else {
+                    // 선택된 카테고리만 보이기
+                    categorySections.forEach(section => {
+                        if (section.dataset.category === category) {
+                            section.style.display = 'block';
+                        } else {
+                            section.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+
+        // 카드 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.resource-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+{% endblock %}

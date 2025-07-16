@@ -4,7 +4,13 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 py-12">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">익명 커뮤니티</h1>
+    <!-- 헤더 -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-comments text-blue-600 mr-3"></i>익명 커뮤니티
+        </h1>
+        <p class="text-lg text-gray-600">자유롭게 소통하고 정보를 나누어보세요</p>
+    </div>
 
     {% if detail_post %}
     <!-- 게시글 상세 보기 -->
