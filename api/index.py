@@ -169,34 +169,87 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template('index.html')
 
-
 @app.route('/community', methods=['GET', 'POST'])
 def community():
-    logging.warning("🔥 /community 진입 성공")
-    if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        content = request.form.get('content', '').strip()
-        if title and content:
-            post = {
-                'title': title,
-                'content': content,
-                'timestamp': datetime.now()
-            }
-            posts_collection.insert_one(post)
-            return redirect(url_for('community'))
-
-    # 글 상세보기 (안전하게 처리)
-    post_id = request.args.get('post_id')
-    detail_post = None
-    if post_id:
+    try:
+        logging.warning("🔥 /community 진입 성공")
+        
+        # MongoDB 연결 상태 확인
         try:
-            detail_post = posts_collection.find_one({'_id': ObjectId(post_id)})
-        except (InvalidId, Exception) as e:
-            logging.error(f"Invalid ObjectId: {post_id} / {e}")
-            detail_post = None
+            posts_collection.find_one()
+        except Exception as db_error:
+            logging.error(f"MongoDB 연결 오류: {str(db_error)}")
+            return render_template('error.html', 
+                                 error_message="데이터베이스 연결에 실패했습니다. 잠시 후 다시 시도해주세요."), 500
+        
+        if request.method == 'POST':
+            try:
+                title = request.form.get('title', '').strip()
+                content = request.form.get('content', '').strip()
+                
+                if not title or not content:
+                    return render_template('community.html', 
+                                         posts=[], 
+                                         error_message="제목과 내용을 모두 입력해주세요."), 400
+                
+                post = {
+                    'title': title,
+                    'content': content,
+                    'timestamp': datetime.now()
+                }
+                
+                result = posts_collection.insert_one(post)
+                if result.inserted_id:
+                    logging.info(f"게시글 작성 성공: {result.inserted_id}")
+                    return redirect(url_for('community'))
+                else:
+                    logging.error("게시글 작성 실패")
+                    return render_template('community.html', 
+                                         posts=[], 
+                                         error_message="게시글 작성에 실패했습니다."), 500
+                    
+            except Exception as post_error:
+                logging.error(f"게시글 작성 중 오류: {str(post_error)}")
+                return render_template('community.html', 
+                                     posts=[], 
+                                     error_message="게시글 작성 중 오류가 발생했습니다."), 500
 
-    posts = list(posts_collection.find().sort("timestamp", -1))
-    return render_template('community.html', posts=posts, detail_post=detail_post)
+        # GET 요청 처리
+        # 글 상세보기 (안전하게 처리)
+        post_id = request.args.get('post_id')
+        detail_post = None
+        
+        if post_id:
+            try:
+                # ObjectId 유효성 검사
+                if len(post_id) != 24 or not all(c in '0123456789abcdef' for c in post_id.lower()):
+                    logging.warning(f"잘못된 ObjectId 형식: {post_id}")
+                    return redirect(url_for('community'))
+                
+                detail_post = posts_collection.find_one({'_id': ObjectId(post_id)})
+                if not detail_post:
+                    logging.warning(f"존재하지 않는 게시글: {post_id}")
+                    return redirect(url_for('community'))
+                    
+            except (InvalidId, Exception) as e:
+                logging.error(f"Invalid ObjectId: {post_id} / {e}")
+                return redirect(url_for('community'))
+
+        # 게시글 목록 조회
+        try:
+            posts = list(posts_collection.find().sort("timestamp", -1).limit(100))
+            logging.info(f"게시글 {len(posts)}개 조회 완료")
+        except Exception as posts_error:
+            logging.error(f"게시글 목록 조회 오류: {str(posts_error)}")
+            posts = []
+
+        return render_template('community.html', posts=posts, detail_post=detail_post)
+        
+    except Exception as e:
+        logging.error(f"/community 라우트에서 예상치 못한 오류 발생: {str(e)}")
+        return render_template('error.html', 
+                             error_message="서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."), 500
+
 @app.route('/get_meal', methods=['POST'])
 def get_meal_api():
     try:
