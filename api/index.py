@@ -200,8 +200,8 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
 
 app = Flask(__name__)    #플라스크 객체(서버) 생성
-app.config["MONGO_URI"] = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/community"
-mongo = PyMongo(app)     #mongo 변수를 통해 DB(community)에 접근 가능
+#app.config["MONGO_URI"] = "mongodb+srv://jtube0825:O6U6y8Jho2OZgv7C@cluster0.coc1ywm.mongodb.net/community"
+#mongo = PyMongo(app)     #mongo 변수를 통해 DB(community)에 접근 가능
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
